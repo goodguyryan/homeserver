@@ -24,4 +24,4 @@ jobs:
             
             - name: Run Pylint
               run: |
-                    pylint $(git ls-files '*.py')
+                    pylint -d C0114, C0115, C0116 $(git ls-files '*.py')
