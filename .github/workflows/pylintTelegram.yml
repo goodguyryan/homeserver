@@ -1,0 +1,38 @@
+name: Pylint (telegramBot)
+on: [push, pull_request]
+
+jobs:
+    build:
+        strategy:
+            matrix:
+                platform: [ubuntu-latest, windows-latest, macos-latest]
+                python-version: [3.11, 3.12, 3.13]
+        runs-on: ${{ matrix.platform }}
+        
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Python ${{ matrix.python-version }}
+              uses: actions/setup-python@v4
+              with:
+                  python-version: ${{ matrix.python-version }}
+
+            - name: Install dependencies on Linux/MacOS
+              if: runner.os != 'Windows'
+              working-directory: telegramBot
+              run: |
+                    python -m pip install --upgrade pip
+                    pip install pylint
+                    if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+            
+            - name: Install dependencies on Windows
+              if: runner.os == 'Windows'
+              working-directory: telegramBot
+              run: |
+                python -m pip install --upgrade pip
+                pip install pylint
+                if (Test-Path -Path "requirements.txt") { pip install -r requirements.txt }
+            
+            - name: Run Pylint
+              run: |
+                    pylint --disable=C0114,C0115,C0116 $(git ls-files 'telegramBot/*.py' 'telegramBot/**/*.py')
