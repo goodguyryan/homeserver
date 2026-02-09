@@ -1,4 +1,4 @@
-name: Python Application
+name: Pytest and Flake8 (telegramBot)
 on: [push, pull_request]
 
 jobs:
