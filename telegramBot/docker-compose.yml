@@ -1,0 +1,14 @@
+services:
+  bot:
+    build: .
+    container_name: telegram-bot
+    restart: unless-stopped
+    environment:
+      TOKEN: ${TOKEN}
+      DATABASE_URL: ${DATABASE_URL}
+    networks:
+      - shared-network
+  
+networks:
+  shared-network:
+    external: true
