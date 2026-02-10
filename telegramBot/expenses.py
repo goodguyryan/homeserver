@@ -14,7 +14,8 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 def get_db_connection():
     return psycopg.connect(DATABASE_URL, row_factory=dict_row)
 
-async def start(update: Update) -> None:
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    _=context
     await update.message.reply_text("Welcome to the Expenses Bot! Use /add to add an expense.")
 
 async def add_expense(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -22,7 +23,11 @@ async def add_expense(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         await update.message.reply_text("Usage: /add <description> <amount>")
         return
     description = " ".join(context.args[:-1])
-    amount = float(context.args[-1])
+    try:
+        amount = round(float(context.args[-1]), 2)
+    except ValueError:
+        await update.message.reply_text("Amount must be a number. Example: /add lunch 5.50")
+        return
     day = datetime.datetime.now().date().day
     month = datetime.datetime.now().date().month
     year = datetime.datetime.now().date().year
@@ -37,7 +42,8 @@ async def add_expense(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Non
         conn.commit()
     await update.message.reply_text(f"Added expense: {description}: ${amount:.2f}")
 
-async def see_total_monthly_expenses(update: Update) -> None:
+async def see_total_monthly_expenses(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    _=context
     month = datetime.datetime.now().date().month
     year = datetime.datetime.now().date().year
     with get_db_connection() as conn:
