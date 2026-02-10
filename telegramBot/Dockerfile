@@ -9,6 +9,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY main.py .
 COPY expenses.py .
 COPY gpa.py .
+COPY menu.py .
 
 #Run the application
 CMD ["python", "main.py"]
