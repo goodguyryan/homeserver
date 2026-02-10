@@ -9,7 +9,7 @@ from telegram.ext import (
     ContextTypes,
 )
 
-DATABASE_URL = os.environ.get["DATABASE_URL"]
+DATABASE_URL = os.environ.get("DATABASE_URL")
 
 def get_db_connection():
     return psycopg.connect(DATABASE_URL, row_factory=dict_row)
