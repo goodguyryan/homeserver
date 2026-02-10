@@ -14,7 +14,7 @@ DATABASE_URL = os.environ.get("DATABASE_URL")
 def get_db_connection():
     return psycopg.connect(DATABASE_URL, row_factory=dict_row)
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def help(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     _=context
     await update.message.reply_text("Welcome to the Expenses Bot! Use /add to add an expense.")
 
@@ -57,6 +57,6 @@ async def see_total_monthly_expenses(update: Update, context: ContextTypes.DEFAU
             await update.message.reply_text(f"Total monthly expenses: ${total:.2f}")
 
 def expense_handlers(application: Application) -> None:
-    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("help", help))
     application.add_handler(CommandHandler("add", add_expense))
-    application.add_handler(CommandHandler("thisMonth", see_total_monthly_expenses))
+    application.add_handler(CommandHandler("thismonth", see_total_monthly_expenses))
