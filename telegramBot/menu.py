@@ -6,6 +6,9 @@ from telegram.ext import (
     ContextTypes,
 )
 
+from expenses import prompt_add_expense
+from expenses import reply_this_month_total
+
 MAIN_MENU, EXPENSES_MENU, GAMBLING_MENU= range(3)
 
 CB_MAIN_EXPENSES = "main:expenses"
@@ -57,15 +60,18 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return MAIN_MENU
 
 async def on_main_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    _=context
     query = update.callback_query
     await query.answer()
 
     if query.data == CB_MAIN_EXPENSES:
-        await query.edit_message_text("Expenses: choose an action", reply_markup=keyboard_expenses())
+        await query.edit_message_text("Expenses: choose an action", 
+                                      reply_markup=keyboard_expenses())
         return EXPENSES_MENU
 
     if query.data == CB_MAIN_GAMBLING:
-        await query.edit_message_text("Gambling: not implemented yet.", reply_markup=keyboard_gambling())
+        await query.edit_message_text("Gambling: not implemented yet.", 
+                                      reply_markup=keyboard_gambling())
         return GAMBLING_MENU
 
     await query.edit_message_text("What would you like to do?", reply_markup=keyboard_main())
@@ -85,18 +91,13 @@ async def on_expenses_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.answer()
     menu_msg = query.message
 
-    if query.data == CB_EXP_ADD:
-        from expenses import prompt_add_expense
+    if query.data == CB_EXP_ADD:   
         await prompt_add_expense(update, context)
         return EXPENSES_MENU
 
     if query.data == CB_EXP_THISMONTH:
-        from expenses import reply_this_month_total
         await reply_this_month_total(update, context)
-        try:
-            await menu_msg.delete()
-        except Exception:
-            pass
+        await menu_msg.delete()
         return EXPENSES_MENU
 
     if query.data == CB_BACK_MAIN:
