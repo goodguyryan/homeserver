@@ -6,10 +6,10 @@ from telegram.ext import (
     ContextTypes,
 )
 
-MAIN_MENU, EXPENSES_MENU, GPA_MENU = range(3)
+MAIN_MENU, EXPENSES_MENU, GPA_MENU, CLOSE_MENU = range(4)
 
 CB_MAIN_EXPENSES = "main:expenses"
-CB_MAIN_GPA = "main:gpa"
+CB_MAIN_GAMBLING = "main:gambling"
 
 CB_EXP_ADD = "exp:add"
 CB_EXP_THISMONTH = "exp:thismonth"
@@ -18,18 +18,22 @@ CB_EXP_BACK = "exp:back"
 CB_GPA_BACK = "gpa:back"
 
 CB_BACK_MAIN = "back:main"
+CB_CLOSE = "ui:close"
 
 
-def kb_main() -> InlineKeyboardMarkup:
+def keyboard_main() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
-        [[
-            InlineKeyboardButton("GPA", callback_data=CB_MAIN_GPA),
+        [
+            [
             InlineKeyboardButton("Expenses", callback_data=CB_MAIN_EXPENSES),
-        ]]
+            InlineKeyboardButton("Gambling", callback_data=CB_MAIN_GAMBLING),
+            ],
+            [InlineKeyboardButton("Close", callback_data=CB_CLOSE)],
+        ]
     )
 
 
-def kb_expenses() -> InlineKeyboardMarkup:
+def keyboard_expenses() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         [
             [
@@ -41,7 +45,7 @@ def kb_expenses() -> InlineKeyboardMarkup:
     )
 
 
-def kb_gpa() -> InlineKeyboardMarkup:
+def keyboard_gambling() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         [[InlineKeyboardButton("⬅ Back", callback_data=CB_BACK_MAIN)]]
     )
@@ -49,23 +53,29 @@ def kb_gpa() -> InlineKeyboardMarkup:
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     _ = context
-    await update.message.reply_text("What would you like to do?", reply_markup=kb_main())
+    await update.message.reply_text("What would you like to do?", reply_markup=keyboard_main())
     return MAIN_MENU
 
+async def close_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    _ = context
+    query = update.callback_query
+    await query.answer()
+    await query.message.delete()
+    return ConversationHandler.END
 
 async def on_main_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
 
     if query.data == CB_MAIN_EXPENSES:
-        await query.edit_message_text("Expenses: choose an action", reply_markup=kb_expenses())
+        await query.edit_message_text("Expenses: choose an action", reply_markup=keyboard_expenses())
         return EXPENSES_MENU
 
-    if query.data == CB_MAIN_GPA:
-        await query.edit_message_text("GPA: not implemented yet.", reply_markup=kb_gpa())
-        return GPA_MENU
+    if query.data == CB_MAIN_GAMBLING:
+        await query.edit_message_text("Gambling: not implemented yet.", reply_markup=keyboard_gambling())
+        return CLOSE_MENU
 
-    await query.edit_message_text("What would you like to do?", reply_markup=kb_main())
+    await query.edit_message_text("What would you like to do?", reply_markup=keyboard_main())
     return MAIN_MENU
 
 
@@ -73,7 +83,7 @@ async def on_back_to_main(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     _ = context
     query = update.callback_query
     await query.answer()
-    await query.edit_message_text("What would you like to do?", reply_markup=kb_main())
+    await query.edit_message_text("What would you like to do?", reply_markup=keyboard_main())
     return MAIN_MENU
 
 
@@ -89,14 +99,14 @@ async def on_expenses_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if query.data == CB_EXP_THISMONTH:
         from expenses import reply_this_month_total
         await reply_this_month_total(update, context)
-        await query.message.reply_text("Expenses: choose an action", reply_markup=kb_expenses())
+        await query.message.reply_text("Expenses: choose an action", reply_markup=keyboard_expenses())
         return EXPENSES_MENU
 
     if query.data == CB_BACK_MAIN:
-        await query.edit_message_text("What would you like to do?", reply_markup=kb_main())
+        await query.edit_message_text("What would you like to do?", reply_markup=keyboard_main())
         return MAIN_MENU
 
-    await query.edit_message_text("Expenses: choose an action", reply_markup=kb_expenses())
+    await query.edit_message_text("Expenses: choose an action", reply_markup=keyboard_expenses())
     return EXPENSES_MENU
 
 
@@ -113,6 +123,9 @@ def build_menu_conversation() -> ConversationHandler:
             GPA_MENU: [
                 CallbackQueryHandler(on_back_to_main, pattern=r"^back:main$"),
             ],
+            CLOSE_MENU: [
+                CallbackQueryHandler(close_menu, pattern=r"^ui:close$"),
+            ]
         },
         fallbacks=[CommandHandler("start", start)],
         allow_reentry=True,

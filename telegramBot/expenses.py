@@ -5,7 +5,6 @@ from psycopg.rows import dict_row
 from telegram import Update
 from telegram.ext import (
     Application,
-    CommandHandler,
     ContextTypes,
     MessageHandler,
     filters,
@@ -86,7 +85,6 @@ async def handle_typed_expense_if_waiting(update: Update, context: ContextTypes.
         return
 
     text = (update.message.text or "").strip()
-
     try:
         description, amount = parse_expense_text(text)
     except ValueError as e:
