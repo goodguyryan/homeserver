@@ -8,8 +8,8 @@ from telegram.ext import (
 
 from expenses import prompt_add_expense
 from expenses import reply_this_month_total
-from telegramBot.game import prompt_add_gamble, prompt_add_game
-from telegramBot.game import reply_total_net_amount
+from game import prompt_add_game
+from game import reply_total_net_amount
 
 MAIN_MENU, EXPENSES_MENU, GAMES_MENU= range(3)
 
