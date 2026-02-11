@@ -6,7 +6,7 @@ from telegram.ext import (
     ContextTypes,
 )
 
-MAIN_MENU, EXPENSES_MENU, GPA_MENU, CLOSE_MENU = range(4)
+MAIN_MENU, EXPENSES_MENU, GAMBLING_MENU= range(3)
 
 CB_MAIN_EXPENSES = "main:expenses"
 CB_MAIN_GAMBLING = "main:gambling"
@@ -15,7 +15,7 @@ CB_EXP_ADD = "exp:add"
 CB_EXP_THISMONTH = "exp:thismonth"
 CB_EXP_BACK = "exp:back"
 
-CB_GPA_BACK = "gpa:back"
+CB_GAMBLING_BACK = "gambling:back"
 
 CB_BACK_MAIN = "back:main"
 CB_CLOSE = "ui:close"
@@ -56,13 +56,6 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await update.message.reply_text("What would you like to do?", reply_markup=keyboard_main())
     return MAIN_MENU
 
-async def close_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    _ = context
-    query = update.callback_query
-    await query.answer()
-    await query.message.delete()
-    return ConversationHandler.END
-
 async def on_main_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
@@ -73,7 +66,7 @@ async def on_main_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
     if query.data == CB_MAIN_GAMBLING:
         await query.edit_message_text("Gambling: not implemented yet.", reply_markup=keyboard_gambling())
-        return CLOSE_MENU
+        return GAMBLING_MENU
 
     await query.edit_message_text("What would you like to do?", reply_markup=keyboard_main())
     return MAIN_MENU
@@ -109,23 +102,27 @@ async def on_expenses_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.edit_message_text("Expenses: choose an action", reply_markup=keyboard_expenses())
     return EXPENSES_MENU
 
+async def close_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    _ = context
+    query = update.callback_query
+    await query.answer()
+    await query.message.delete()
+    return ConversationHandler.END
 
 def build_menu_conversation() -> ConversationHandler:
     return ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
             MAIN_MENU: [
+                CallbackQueryHandler(close_menu, pattern=r"^ui:close$"),
                 CallbackQueryHandler(on_main_choice, pattern=r"^main:"),
             ],
             EXPENSES_MENU: [
                 CallbackQueryHandler(on_expenses_choice, pattern=r"^(exp:|back:main)"),
             ],
-            GPA_MENU: [
+            GAMBLING_MENU: [
                 CallbackQueryHandler(on_back_to_main, pattern=r"^back:main$"),
             ],
-            CLOSE_MENU: [
-                CallbackQueryHandler(close_menu, pattern=r"^ui:close$"),
-            ]
         },
         fallbacks=[CommandHandler("start", start)],
         allow_reentry=True,
