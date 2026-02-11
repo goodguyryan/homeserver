@@ -110,7 +110,7 @@ async def close_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     _ = context
     query = update.callback_query
     await query.answer()
-    await query.message.delete()
+    await query.edit_message_text("Menu closed. Type /start to open it again.")
     return ConversationHandler.END
 
 def build_menu_conversation() -> ConversationHandler:
