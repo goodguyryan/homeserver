@@ -18,25 +18,26 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-  
+
   db_init:
     image: postgres:18
     depends_on:
       db:
         condition: service_healthy
-    restart: "no"
+    networks:
+      - shared-network
+    volumes:
+      - ./pginit:/pginit:ro
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    volumes:
-      - ./pginit:/pginit:ro
+    restart: "no"
     command: >
-      psql -h db -U ${POSTGRES_USER} -d ${POSTGRES_DB} -v ON_ERROR_STOP=1
-      -f /pginit/initdb.sql
-    networks:
-      - shared-network
-
+      bash -lc "
+      psql -h postgres-server -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /pginit/initdb.sql
+      "
+      
 networks:
   shared-network:
     external: true
