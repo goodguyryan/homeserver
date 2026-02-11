@@ -15,7 +15,7 @@ WAITING_FOR_EXPENSE_INPUT = "waiting_for_expense_input"
 def get_db_connection():
     return psycopg.connect(DATABASE_URL, row_factory=dict_row)
 
-def parse_gamble_text(text: str) -> tuple[str, float]:
+def parse_game_text(text: str) -> tuple[str, float]:
     text = (text or "").strip()
     if not text:
         raise ValueError("Empty input")
@@ -33,46 +33,46 @@ def parse_gamble_text(text: str) -> tuple[str, float]:
 
     return game, net_amount
 
-def insert_gamble(game: str, net_amount: float) -> None:
+def insert_game(game: str, net_amount: float) -> None:
     today = datetime.datetime.now().date()
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO gambling (game, net_amount, month, year) " \
+                "INSERT INTO games (game, net_amount, month, year) " \
                 "VALUES (%s, %s, %s, %s)",
                 (game, net_amount, today.month, today.year),
             )
         conn.commit()
 
-async def prompt_add_gamble(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def prompt_add_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
     context.user_data[WAITING_FOR_EXPENSE_INPUT] = True
     await query.edit_message_text(
-        "What gamble would you like to add?\n\nType: <game> <net_amount>\nExample: poker 10.50"
+        "What game would you like to add?\n\nType: <game> <net_amount>\nExample: poker 10.50"
     )
 
-async def handle_typed_gamble_if_waiting(update: Update,
+async def handle_typed_game_if_waiting(update: Update,
                                           context: ContextTypes.DEFAULT_TYPE) -> None:
     if not context.user_data.get(WAITING_FOR_EXPENSE_INPUT):
         return
 
     text = (update.message.text or "").strip()
     try:
-        game, net_amount = parse_gamble_text(text)
+        game, net_amount = parse_game_text(text)
     except ValueError as e:
         await update.message.reply_text(
             f"Invalid format: {e}\n\nPlease type: <game> <net_amount>\nExample: poker 10.50"
         )
         return
 
-    insert_gamble(game, net_amount)
+    insert_game(game, net_amount)
     context.user_data[WAITING_FOR_EXPENSE_INPUT] = False
-    await update.message.reply_text(f"Added gamble: {game}: ${net_amount:.2f}")
+    await update.message.reply_text(f"Added game: {game}: ${net_amount:.2f}")
 
 def fetch_all_net_amount() -> list[dict]:
     with get_db_connection() as conn:
         with conn.cursor() as cur:
-            cur.execute("SELECT net_amount FROM gambling")
+            cur.execute("SELECT net_amount FROM games")
             return cur.fetchall()
 
 def compute_total_net_amount() -> float:
@@ -83,9 +83,9 @@ async def reply_total_net_amount(update: Update, context: ContextTypes.DEFAULT_T
     _ = context
     query = update.callback_query
     total = compute_total_net_amount()
-    await query.message.reply_text(f"Total net amount from gambling: ${total:.2f}")
+    await query.message.reply_text(f"Total net amount from games: ${total:.2f}")
 
-def register_gambling_commands(application: Application) -> None:
+def register_game_commands(application: Application) -> None:
         application.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_typed_gamble_if_waiting)
+        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_typed_game_if_waiting)
     )

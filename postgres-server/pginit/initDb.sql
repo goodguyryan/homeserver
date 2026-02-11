@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS expenses (
     year INTEGER NOT NULL
 );
 
-CREATE TABLE IF NOT EXISTS gambling (
+CREATE TABLE IF NOT EXISTS games (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
     game TEXT NOT NULL,
     net_amount NUMERIC(12, 2) NOT NULL,

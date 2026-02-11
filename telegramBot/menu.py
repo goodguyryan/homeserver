@@ -8,21 +8,21 @@ from telegram.ext import (
 
 from expenses import prompt_add_expense
 from expenses import reply_this_month_total
-from gambling import prompt_add_gamble
-from gambling import reply_total_net_amount
+from telegramBot.game import prompt_add_gamble, prompt_add_game
+from telegramBot.game import reply_total_net_amount
 
-MAIN_MENU, EXPENSES_MENU, GAMBLING_MENU= range(3)
+MAIN_MENU, EXPENSES_MENU, GAMES_MENU= range(3)
 
 CB_MAIN_EXPENSES = "main:expenses"
-CB_MAIN_GAMBLING = "main:gambling"
+CB_MAIN_GAME = "main:game"
 
 CB_EXP_ADD = "exp:add"
 CB_EXP_THISMONTH = "exp:thismonth"
 CB_EXP_BACK = "exp:back"
 
-CB_GAMBLING_ADD = "gambling:add"
-CB_GAMBLING_TOTAL = "gambling:total"
-CB_GAMBLING_BACK = "gambling:back"
+CB_GAME_ADD = "game:add"
+CB_GAME_TOTAL = "game:total"
+CB_GAME_BACK = "game:back"
 
 CB_BACK_MAIN = "back:main"
 CB_CLOSE = "ui:close"
@@ -33,7 +33,7 @@ def keyboard_main() -> InlineKeyboardMarkup:
         [
             [
             InlineKeyboardButton("Expenses", callback_data=CB_MAIN_EXPENSES),
-            InlineKeyboardButton("Gambling", callback_data=CB_MAIN_GAMBLING),
+            InlineKeyboardButton("Games", callback_data=CB_MAIN_GAME),
             ],
             [InlineKeyboardButton("Close", callback_data=CB_CLOSE)],
         ]
@@ -52,12 +52,12 @@ def keyboard_expenses() -> InlineKeyboardMarkup:
     )
 
 
-def keyboard_gambling() -> InlineKeyboardMarkup:
+def keyboard_games() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         [
             [
-                InlineKeyboardButton("Add", callback_data=CB_GAMBLING_ADD),
-                InlineKeyboardButton("Total", callback_data=CB_GAMBLING_TOTAL),
+                InlineKeyboardButton("Add", callback_data=CB_GAME_ADD),
+                InlineKeyboardButton("Total", callback_data=CB_GAME_TOTAL),
             ],
             [InlineKeyboardButton("⬅ Back", callback_data=CB_BACK_MAIN)],
         ]
@@ -79,10 +79,10 @@ async def on_main_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                                       reply_markup=keyboard_expenses())
         return EXPENSES_MENU
 
-    if query.data == CB_MAIN_GAMBLING:
-        await query.edit_message_text("Gambling: not implemented yet.",
-                                      reply_markup=keyboard_gambling())
-        return GAMBLING_MENU
+    if query.data == CB_MAIN_GAME:
+        await query.edit_message_text("Games: choose an action",
+                                      reply_markup=keyboard_games())
+        return GAMES_MENU
 
     await query.edit_message_text("What would you like to do?", reply_markup=keyboard_main())
     return MAIN_MENU
@@ -116,25 +116,25 @@ async def on_expenses_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.edit_message_text("Expenses: choose an action", reply_markup=keyboard_expenses())
     return EXPENSES_MENU
 
-async def on_gambling_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def on_game_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
 
-    if query.data == CB_GAMBLING_ADD:
-        await prompt_add_gamble(update, context)
-        return GAMBLING_MENU
+    if query.data == CB_GAME_ADD:
+        await prompt_add_game(update, context)
+        return GAMES_MENU
 
-    if query.data == CB_GAMBLING_TOTAL:
+    if query.data == CB_GAME_TOTAL:
         await reply_total_net_amount(update, context)
         await query.edit_message_text("Menu closed. Type /start to open it again.")
-        return GAMBLING_MENU
+        return GAMES_MENU
 
-    if query.data == CB_BACK_MAIN:
+    if query.data == CB_GAME_BACK:
         await query.edit_message_text("What would you like to do?", reply_markup=keyboard_main())
         return MAIN_MENU
 
-    await query.edit_message_text("Gambling: choose an action", reply_markup=keyboard_gambling())
-    return GAMBLING_MENU
+    await query.edit_message_text("Games: choose an action", reply_markup=keyboard_games())
+    return GAMES_MENU
 
 async def close_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     _ = context
@@ -154,8 +154,8 @@ def build_menu_conversation() -> ConversationHandler:
             EXPENSES_MENU: [
                 CallbackQueryHandler(on_expenses_choice, pattern=r"^(exp:|back:main)"),
             ],
-            GAMBLING_MENU: [
-                CallbackQueryHandler(on_back_to_main, pattern=r"^back:main$"),
+            GAMES_MENU: [
+                CallbackQueryHandler(on_game_choice, pattern=r"^(game:|back:main)"),
             ],
         },
         fallbacks=[CommandHandler("start", start)],
