@@ -30,14 +30,14 @@ services:
       - ./pginit:/pginit:ro
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     restart: "no"
     command: >
       bash -lc "
-      psql -h postgres-server -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /pginit/initdb.sql
+      psql -v ON_ERROR_STOP=1 -h db -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /pginit/initdb.sql
       "
-      
+
 networks:
   shared-network:
     external: true
