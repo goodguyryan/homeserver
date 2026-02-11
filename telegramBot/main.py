@@ -4,7 +4,7 @@ from telegram.ext import Application
 
 from menu import build_menu_conversation
 from expenses import register_expense_commands
-from telegramBot.gambling import register_gambling_commands
+from gambling import register_gambling_commands
 
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
