@@ -89,7 +89,6 @@ async def on_back_to_main(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 async def on_expenses_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
-    menu_msg = query.message
 
     if query.data == CB_EXP_ADD:
         await prompt_add_expense(update, context)
@@ -97,7 +96,7 @@ async def on_expenses_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     if query.data == CB_EXP_THISMONTH:
         await reply_this_month_total(update, context)
-        await menu_msg.delete()
+        await query.edit_message_text("Thank you!")
         return EXPENSES_MENU
 
     if query.data == CB_BACK_MAIN:
