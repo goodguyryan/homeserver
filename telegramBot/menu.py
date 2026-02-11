@@ -8,6 +8,8 @@ from telegram.ext import (
 
 from expenses import prompt_add_expense
 from expenses import reply_this_month_total
+from gambling import prompt_add_gamble
+from gambling import reply_total_net_amount
 
 MAIN_MENU, EXPENSES_MENU, GAMBLING_MENU= range(3)
 
@@ -18,6 +20,8 @@ CB_EXP_ADD = "exp:add"
 CB_EXP_THISMONTH = "exp:thismonth"
 CB_EXP_BACK = "exp:back"
 
+CB_GAMBLING_ADD = "gambling:add"
+CB_GAMBLING_TOTAL = "gambling:total"
 CB_GAMBLING_BACK = "gambling:back"
 
 CB_BACK_MAIN = "back:main"
@@ -50,7 +54,13 @@ def keyboard_expenses() -> InlineKeyboardMarkup:
 
 def keyboard_gambling() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
-        [[InlineKeyboardButton("⬅ Back", callback_data=CB_BACK_MAIN)]]
+        [
+            [
+                InlineKeyboardButton("Add", callback_data=CB_GAMBLING_ADD),
+                InlineKeyboardButton("Total", callback_data=CB_GAMBLING_TOTAL),
+            ],
+            [InlineKeyboardButton("⬅ Back", callback_data=CB_BACK_MAIN)],
+        ]
     )
 
 
@@ -96,7 +106,7 @@ async def on_expenses_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     if query.data == CB_EXP_THISMONTH:
         await reply_this_month_total(update, context)
-        await query.edit_message_text("Thank you!")
+        await query.edit_message_text("Menu closed. Type /start to open it again.")
         return EXPENSES_MENU
 
     if query.data == CB_BACK_MAIN:
@@ -105,6 +115,26 @@ async def on_expenses_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     await query.edit_message_text("Expenses: choose an action", reply_markup=keyboard_expenses())
     return EXPENSES_MENU
+
+async def on_gambling_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    query = update.callback_query
+    await query.answer()
+
+    if query.data == CB_GAMBLING_ADD:
+        await prompt_add_gamble(update, context)
+        return GAMBLING_MENU
+
+    if query.data == CB_GAMBLING_TOTAL:
+        await reply_total_net_amount(update, context)
+        await query.edit_message_text("Menu closed. Type /start to open it again.")
+        return GAMBLING_MENU
+
+    if query.data == CB_BACK_MAIN:
+        await query.edit_message_text("What would you like to do?", reply_markup=keyboard_main())
+        return MAIN_MENU
+
+    await query.edit_message_text("Gambling: choose an action", reply_markup=keyboard_gambling())
+    return GAMBLING_MENU
 
 async def close_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     _ = context
