@@ -93,6 +93,10 @@ async def on_expenses_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if query.data == CB_EXP_THISMONTH:
         from expenses import reply_this_month_total
         await reply_this_month_total(update, context)
+        try:
+            await menu_msg.delete()
+        except Exception:
+            pass
         return EXPENSES_MENU
 
     if query.data == CB_BACK_MAIN:
