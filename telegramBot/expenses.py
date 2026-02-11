@@ -37,17 +37,16 @@ def parse_expense_text(text: str) -> tuple[str, float]:
 
     return description, amount
 
-
 def insert_expense(description: str, amount: float) -> None:
     today = datetime.datetime.now().date()
     with get_db_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
-                "INSERT INTO expenses (description, amount, day, month, year) VALUES (%s, %s, %s, %s, %s)",
+                "INSERT INTO expenses (description, amount, day, month, year) " \
+                "VALUES (%s, %s, %s, %s, %s)",
                 (description, amount, today.day, today.month, today.year),
             )
         conn.commit()
-
 
 def fetch_month_expenses(month: int, year: int) -> list[dict]:
     with get_db_connection() as conn:
@@ -70,7 +69,6 @@ async def prompt_add_expense(update: Update, context: ContextTypes.DEFAULT_TYPE)
         "What expense would you like to add?\n\nType: <description> <amount>\nExample: lunch 5.50"
     )
 
-
 async def reply_this_month_total(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     _ = context
     query = update.callback_query
@@ -80,7 +78,8 @@ async def reply_this_month_total(update: Update, context: ContextTypes.DEFAULT_T
     await query.message.reply_text(f"Total monthly expenses: ${total:.2f}")
 
 
-async def handle_typed_expense_if_waiting(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_typed_expense_if_waiting(update: Update, 
+                                          context: ContextTypes.DEFAULT_TYPE) -> None:
     if not context.user_data.get(WAITING_FOR_EXPENSE_INPUT):
         return
 
