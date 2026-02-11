@@ -65,12 +65,12 @@ async def on_main_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     await query.answer()
 
     if query.data == CB_MAIN_EXPENSES:
-        await query.edit_message_text("Expenses: choose an action", 
+        await query.edit_message_text("Expenses: choose an action",
                                       reply_markup=keyboard_expenses())
         return EXPENSES_MENU
 
     if query.data == CB_MAIN_GAMBLING:
-        await query.edit_message_text("Gambling: not implemented yet.", 
+        await query.edit_message_text("Gambling: not implemented yet.",
                                       reply_markup=keyboard_gambling())
         return GAMBLING_MENU
 
@@ -91,7 +91,7 @@ async def on_expenses_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
     await query.answer()
     menu_msg = query.message
 
-    if query.data == CB_EXP_ADD:   
+    if query.data == CB_EXP_ADD:
         await prompt_add_expense(update, context)
         return EXPENSES_MENU
 

@@ -78,7 +78,7 @@ async def reply_this_month_total(update: Update, context: ContextTypes.DEFAULT_T
     await query.message.reply_text(f"Total monthly expenses: ${total:.2f}")
 
 
-async def handle_typed_expense_if_waiting(update: Update, 
+async def handle_typed_expense_if_waiting(update: Update,
                                           context: ContextTypes.DEFAULT_TYPE) -> None:
     if not context.user_data.get(WAITING_FOR_EXPENSE_INPUT):
         return
