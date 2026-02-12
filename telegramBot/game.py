@@ -10,7 +10,7 @@ from telegram.ext import (
     filters,
 )
 DATABASE_URL = os.environ.get("DATABASE_URL")
-WAITING_FOR_EXPENSE_INPUT = "waiting_for_expense_input"
+WAITING_FOR_GAME_INPUT = "waiting_for_game_input"
 
 def get_db_connection():
     return psycopg.connect(DATABASE_URL, row_factory=dict_row)
@@ -46,14 +46,14 @@ def insert_game(game: str, net_amount: float) -> None:
 
 async def prompt_add_game(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
-    context.user_data[WAITING_FOR_EXPENSE_INPUT] = True
+    context.user_data[WAITING_FOR_GAME_INPUT] = True
     await query.edit_message_text(
         "What game would you like to add?\n\nType: <game> <net_amount>\nExample: poker 10.50"
     )
 
 async def handle_typed_game_if_waiting(update: Update,
                                           context: ContextTypes.DEFAULT_TYPE) -> None:
-    if not context.user_data.get(WAITING_FOR_EXPENSE_INPUT):
+    if not context.user_data.get(WAITING_FOR_GAME_INPUT):
         return
 
     text = (update.message.text or "").strip()
@@ -66,7 +66,7 @@ async def handle_typed_game_if_waiting(update: Update,
         return
 
     insert_game(game, net_amount)
-    context.user_data[WAITING_FOR_EXPENSE_INPUT] = False
+    context.user_data[WAITING_FOR_GAME_INPUT] = False
     await update.message.reply_text(f"Added game: {game}: ${net_amount:.2f}")
 
 def fetch_all_net_amount() -> list[dict]:
