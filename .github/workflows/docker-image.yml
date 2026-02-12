@@ -1,5 +1,6 @@
-name: Test Docker image (telegramBot)
-on: ['push', 'pull_request']
+name: Test Docker images
+on:
+    workflow_call:
 
 jobs:
     builds:
@@ -9,4 +10,4 @@ jobs:
             - uses: actions/checkout@v4
             - name: Build Docker image
               run: |
-                    docker build -t my-docker-image:latest ./telegramBot
+                  docker build -t my-docker-image:latest ./telegramBot
