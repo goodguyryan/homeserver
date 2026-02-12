@@ -1,0 +1,54 @@
+services:
+  db:
+    image: postgres:18
+    container_name: postgres-server
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - 127.0.0.1:${POSTGRES_PORT}:5432
+    volumes:
+      - ./postgres-server/pgdata:/var/lib/postgresql
+    networks:
+      - shared-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  db_init:
+    image: postgres:18
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - shared-network
+    volumes:
+      - ./postgres-server/pginit:/pginit:ro
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    restart: "no"
+    command: >
+      bash -lc "
+      psql -v ON_ERROR_STOP=1 -h db -U ${POSTGRES_USER} -d ${POSTGRES_DB} -f /pginit/initdb.sql
+      "
+  bot:
+    build: 
+      context: ./telegramBot
+      dockerfile: Dockerfile
+    container_name: telegram-bot
+    restart: unless-stopped
+    environment:
+      TOKEN: ${TOKEN}
+      DATABASE_URL: ${DATABASE_URL}
+    networks:
+      - shared-network
+  
+networks:
+  shared-network:
+    external: true
