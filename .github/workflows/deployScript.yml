@@ -20,7 +20,9 @@ jobs:
             - name: Connect runner to VPN
               uses: tailscale/github-action@v3
               with:
-                  authkey: ${{ secrets.TS_AUTH_KEY }}
+                  oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+                  oauth-secret: ${{ secrets.TS_OAUTH_CLIENT_SECRET }}
+                  tags: "ci"
 
             - name: Deploy via SSH
               uses: appleboy/ssh-action@v0.1.6
