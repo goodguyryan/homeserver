@@ -84,7 +84,7 @@ async def on_main_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                                       reply_markup=keyboard_games())
         return GAMES_MENU
 
-    await query.edit_message_text("What would you like to do?", reply_markup=keyboard_main())
+    await query.edit_message_text("Test Auto Deploy", reply_markup=keyboard_main())
     return MAIN_MENU
 
 

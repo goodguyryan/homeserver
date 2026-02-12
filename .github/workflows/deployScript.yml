@@ -32,4 +32,8 @@ jobs:
                   port: ${{ secrets.SERVER_SSH_PORT }}
                   script_stop: true
                   script: |
-                      mkdir ./dummyfolder
+                      set -euo pipefail
+                      cd ~/homeserver
+                      git pull
+                      docker compose down
+                      docker compose up -d --build
