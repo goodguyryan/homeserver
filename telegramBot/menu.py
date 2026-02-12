@@ -14,15 +14,12 @@ from game import reply_total_net_amount
 MAIN_MENU, EXPENSES_MENU, GAMES_MENU= range(3)
 
 CB_MAIN_EXPENSES = "main:expenses"
-CB_MAIN_GAME = "main:game"
-
 CB_EXP_ADD = "exp:add"
 CB_EXP_THISMONTH = "exp:thismonth"
-CB_EXP_BACK = "exp:back"
 
+CB_MAIN_GAME = "main:game"
 CB_GAME_ADD = "game:add"
 CB_GAME_TOTAL = "game:total"
-CB_GAME_BACK = "game:back"
 
 CB_BACK_MAIN = "back:main"
 CB_CLOSE = "ui:close"
@@ -129,7 +126,7 @@ async def on_game_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         await query.edit_message_text("Menu closed. Type /start to open it again.")
         return GAMES_MENU
 
-    if query.data == CB_GAME_BACK:
+    if query.data == CB_BACK_MAIN:
         await query.edit_message_text("What would you like to do?", reply_markup=keyboard_main())
         return MAIN_MENU
 
@@ -140,7 +137,7 @@ async def close_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     _ = context
     query = update.callback_query
     await query.answer()
-    await query.edit_message_text("Test auto deployment. Type /start to open it again.")
+    await query.edit_message_text("Menu closed. Type /start to open it again.")
     return ConversationHandler.END
 
 def build_menu_conversation() -> ConversationHandler:
