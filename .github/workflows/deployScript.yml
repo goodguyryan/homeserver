@@ -18,7 +18,7 @@ jobs:
         needs: [docker, linter, tests]
         steps:
             - name: Connect runner to VPN
-              uses: tailscale/github-action@v1
+              uses: tailscale/github-action@v3
               with:
                   authkey: ${{ secrets.TS_AUTH_KEY }}
 
