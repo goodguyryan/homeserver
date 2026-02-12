@@ -84,7 +84,7 @@ async def on_main_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
                                       reply_markup=keyboard_games())
         return GAMES_MENU
 
-    await query.edit_message_text("Test Auto Deploy", reply_markup=keyboard_main())
+    await query.edit_message_text("What would you like to do?", reply_markup=keyboard_main())
     return MAIN_MENU
 
 
@@ -140,7 +140,7 @@ async def close_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     _ = context
     query = update.callback_query
     await query.answer()
-    await query.edit_message_text("Menu closed. Type /start to open it again.")
+    await query.edit_message_text("Test auto deployment. Type /start to open it again.")
     return ConversationHandler.END
 
 def build_menu_conversation() -> ConversationHandler:
