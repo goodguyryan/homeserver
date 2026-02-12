@@ -87,5 +87,6 @@ async def reply_total_net_amount(update: Update, context: ContextTypes.DEFAULT_T
 
 def register_game_commands(application: Application) -> None:
     application.add_handler(
-    MessageHandler(filters.TEXT & ~filters.COMMAND, handle_typed_game_if_waiting)
+    MessageHandler(filters.TEXT & ~filters.COMMAND, handle_typed_game_if_waiting),
+    group=2
     )

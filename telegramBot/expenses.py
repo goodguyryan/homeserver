@@ -98,5 +98,6 @@ async def handle_typed_expense_if_waiting(update: Update,
 
 def register_expense_commands(application: Application) -> None:
     application.add_handler(
-        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_typed_expense_if_waiting)
+        MessageHandler(filters.TEXT & ~filters.COMMAND, handle_typed_expense_if_waiting),
+        group=1
     )
