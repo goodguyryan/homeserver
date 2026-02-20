@@ -10,4 +10,5 @@ pgdata/
 #Terraform
 .terraform/
 .terraform.lock.hcl
-
+*.tfstate
+*.tfstate.*
