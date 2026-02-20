@@ -1,4 +1,13 @@
+#Python
 venv/
+
+#Data mount
 pgdata/
 
+#.env
 *.env
+
+#Terraform
+.terraform/
+.terraform.lock.hcl
+
