@@ -5,13 +5,13 @@
   become: yes
 
   tasks:
-    - name: Update System
-      ansible.builtin.apt:
-        update_cache: yes
+    # - name: Update System
+    #   ansible.builtin.apt:
+    #     update_cache: yes
 
-    - name: Upgrade System
-      ansible.builtin.apt:
-        upgrade: "yes"
+    # - name: Upgrade System
+    #   ansible.builtin.apt:
+    #     upgrade: "yes"
 
     - name: Install and Configure Prometheus
       prometheus.prometheus.prometheus:
