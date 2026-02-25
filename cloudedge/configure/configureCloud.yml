@@ -18,3 +18,11 @@
         name: prometheus.prometheus.prometheus
       vars:
         prometheus_config_file: "{{ playbook_dir }}/templates/prometheus.yml.j2"
+
+    - name: Install Tailscale
+      ansible.builtin.shell: |
+        curl -fsSL https://tailscale.com/install.sh | sh
+
+    - name: Connect to Tailscale
+      ansible.builtin.shell: |
+        sudo tailscale up --authkey={{ tailscale_auth_key }} --advertise-exit-node
