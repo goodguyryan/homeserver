@@ -14,5 +14,7 @@
     #     upgrade: "yes"
 
     - name: Install and Configure Prometheus
-      prometheus.prometheus.prometheus:
+      ansible.builtin.include_role:
+        name: prometheus.prometheus.prometheus
+      vars:
         config_file: ./prometheus.yml.j2
