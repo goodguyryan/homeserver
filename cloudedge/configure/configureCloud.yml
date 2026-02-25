@@ -23,18 +23,33 @@
       ansible.builtin.shell: |
         curl -fsSL https://tailscale.com/install.sh | sh
 
+    - name: Ensure tailscaled is running
+      ansible.builtin.service:
+        name: tailscaled
+        state: started
+        enabled: true
+      become: true
+
     - name: Check Tailscale JSON status
-      ansible.builtin.command: sudo tailscale status --json
+      ansible.builtin.command: tailscale status --json
       register: ts_json
       changed_when: false
+      become: true
+
+    - name: Parse BackendState
+      ansible.builtin.set_fact:
+        ts_backend_state: "{{ (ts_json.stdout | from_json).BackendState | default('') }}"
+
+    - name: Debug BackendState
+      ansible.builtin.debug:
+        var: ts_backend_state
 
     - name: Tailscale up if not connected
-      ansible.builtin.command:
-        cmd: >
-          sudo tailscale up
-          --authkey={{ lookup('env','TAILSCALE_AUTH_KEY') }}
-          --advertise-exit-node
+      ansible.builtin.command: >
+        tailscale up
+        --authkey={{ lookup('env','TAILSCALE_AUTH_KEY') }}
+        --advertise-exit-node
+      become: true
       async: 30
       poll: 5
-      when: ts_json.stdout is search('"BackendState":"Stopped"') or
-        ts_json.stdout is search('"BackendState":"NeedsLogin"')
+      when: ts_backend_state in ['NeedsLogin', 'Stopped', 'NoState']
