@@ -23,6 +23,18 @@
       ansible.builtin.shell: |
         curl -fsSL https://tailscale.com/install.sh | sh
 
-    - name: Connect to Tailscale
-      ansible.builtin.shell: |
-        sudo tailscale up --authkey={{ tailscale_auth_key }} --advertise-exit-node
+    - name: Check Tailscale JSON status
+      ansible.builtin.command: sudo tailscale status --json
+      register: ts_json
+      changed_when: false
+
+    - name: Tailscale up if not connected
+      ansible.builtin.command:
+        cmd: >
+          sudo tailscale up
+          --authkey={{ tailscale_auth_key }}
+          --advertise-exit-node
+      async: 30
+      poll: 5
+      when: ts_json.stdout is search('"BackendState":"Stopped"') or
+        ts_json.stdout is search('"BackendState":"NeedsLogin"')
