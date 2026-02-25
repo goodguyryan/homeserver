@@ -17,4 +17,4 @@
       ansible.builtin.include_role:
         name: prometheus.prometheus.prometheus
       vars:
-        config_file: "prometheus.yml.j2"
+        prometheus_config_file: "prometheus.yml.j2"
