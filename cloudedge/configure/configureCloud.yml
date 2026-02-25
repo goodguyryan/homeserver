@@ -32,7 +32,7 @@
       ansible.builtin.command:
         cmd: >
           sudo tailscale up
-          --authkey={{ tailscale_auth_key }}
+          --authkey={{ lookup('env','TAILSCALE_AUTH_KEY') }}
           --advertise-exit-node
       async: 30
       poll: 5
