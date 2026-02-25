@@ -14,7 +14,7 @@
         upgrade: "yes"
 
     - name: Install Prometheus
-      ansible.builtin.service:
+      ansible.builtin.apt:
         name: prometheus
         state: present
 
