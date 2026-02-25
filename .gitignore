@@ -12,3 +12,6 @@ pgdata/
 .terraform.lock.hcl
 *.tfstate
 *.tfstate.*
+
+#Ansible
+inventory.yml

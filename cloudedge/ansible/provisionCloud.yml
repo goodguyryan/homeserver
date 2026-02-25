@@ -1,0 +1,25 @@
+---
+- name: Provision Cloud Resources
+  hosts: all
+  gather_facts: false
+  become: yes
+
+  tasks:
+    - name: Update System
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Upgrade System
+      ansible.builtin.apt:
+        upgrade: "yes"
+
+    - name: Install Prometheus
+      ansible.builtin.service:
+        name: prometheus
+        state: present
+
+    - name: Enable Prometheus Service
+      ansible.builtin.service:
+        name: prometheus
+        enabled: true
+        state: started
