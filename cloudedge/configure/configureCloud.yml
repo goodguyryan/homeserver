@@ -13,13 +13,6 @@
       ansible.builtin.apt:
         upgrade: "yes"
 
-    - name: Install Prometheus
-      ansible.builtin.apt:
-        name: prometheus
-        state: present
-
-    - name: Enable Prometheus Service
-      ansible.builtin.service:
-        name: prometheus
-        enabled: true
-        state: started
+    - name: Install and Configure Prometheus
+      prometheus.prometheus.prometheus:
+        config_file: ./prometheus.yml.j2
