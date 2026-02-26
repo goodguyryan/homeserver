@@ -4,6 +4,9 @@
   gather_facts: true
   become: yes
 
+  vars_files:
+    - "{{ playbook_dir }}/.env.yml"
+
   tasks:
     # - name: Update System
     #   ansible.builtin.apt:
@@ -46,7 +49,7 @@
 
     - name: Look up Auth Key
       ansible.builtin.set_fact:
-        tailscale_auth_key: "{{ lookup('env','TAILSCALE_AUTH_KEY') }}"
+        tailscale_auth_key: "{{ TAILSCALE_AUTH_KEY }}"
 
     - name: Debug Auth Key
       ansible.builtin.debug:
@@ -55,7 +58,7 @@
     - name: Tailscale up if not connected
       ansible.builtin.command: >
         tailscale up
-        --authkey={{ lookup('env','TAILSCALE_AUTH_KEY') }}
+        --authkey={{ tailscale_auth_key }}
         --advertise-exit-node
       become: true
       async: 30
