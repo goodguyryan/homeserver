@@ -5,7 +5,7 @@ venv/
 pgdata/
 
 #.env
-*.env
+*.env*
 
 #Terraform
 .terraform/
