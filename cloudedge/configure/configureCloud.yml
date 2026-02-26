@@ -20,7 +20,7 @@
       ansible.builtin.include_role:
         name: prometheus.prometheus.prometheus
       vars:
-        prometheus_config_file: "{{ playbook_dir }}/templates/prometheus.yml.j2"
+        prometheus_config_file: "{{ playbook_dir | dirname }}/monitoring/prometheus.yml.j2"
 
     - name: Install Tailscale
       ansible.builtin.shell: |
