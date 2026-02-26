@@ -43,10 +43,6 @@
       ansible.builtin.set_fact:
         ts_backend_state: "{{ (ts_json.stdout | from_json).BackendState | default('') }}"
 
-    - name: Debug BackendState
-      ansible.builtin.debug:
-        var: ts_backend_state
-
     - name: Look up Auth Key
       ansible.builtin.set_fact:
         tailscale_auth_key: "{{ TAILSCALE_AUTH_KEY }}"
