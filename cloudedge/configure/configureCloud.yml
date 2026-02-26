@@ -21,7 +21,7 @@
         name: prometheus.prometheus.prometheus
       vars:
         prometheus_config_file: "{{ playbook_dir | dirname }}/monitoring/prometheus.yml.j2"
-        prometheus_web_listen_address: "{{ HOMESERVER_TAILSCALE }}:9090"
+        prometheus_web_listen_address: "{{ HOMESERVER_TAILSCALE }}:9100"
 
     - name: Install Tailscale
       ansible.builtin.shell: |
