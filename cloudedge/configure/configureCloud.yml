@@ -44,6 +44,14 @@
       ansible.builtin.debug:
         var: ts_backend_state
 
+    - name: Look up Auth Key
+      ansible.builtin.set_fact:
+        tailscale_auth_key: "{{ lookup('env','TAILSCALE_AUTH_KEY') }}"
+
+    - name: Debug Auth Key
+      ansible.builtin.debug:
+        var: tailscale_auth_key
+
     - name: Tailscale up if not connected
       ansible.builtin.command: >
         tailscale up
