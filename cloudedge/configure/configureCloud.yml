@@ -16,13 +16,6 @@
       ansible.builtin.apt:
         upgrade: "yes"
 
-    - name: Install and Configure Prometheus
-      ansible.builtin.include_role:
-        name: prometheus.prometheus.prometheus
-      vars:
-        prometheus_config_file: "{{ playbook_dir | dirname }}/monitoring/prometheus.yml.j2"
-        prometheus_storage_retention: "3d"
-
     - name: Install Tailscale
       ansible.builtin.shell: |
         curl -fsSL https://tailscale.com/install.sh | sh
@@ -55,3 +48,35 @@
         --advertise-exit-node
       become: true
       when: ts_backend_state in ['NeedsLogin', 'Stopped', 'NoState']
+
+    - name: Install and Configure Prometheus
+      ansible.builtin.include_role:
+        name: prometheus.prometheus.prometheus
+      vars:
+        prometheus_config_file: "{{ playbook_dir | dirname }}/monitoring/prometheus.yml.j2"
+        prometheus_storage_retention: "3d"
+
+    - name: Install Grafana Dependencies
+      ansible.builtin.apt:
+        name:
+          - adduser
+          - libfontconfig1
+          - musl
+        state: present
+        update_cache: true
+
+    - name: Download Grafana .deb
+      ansible.builtin.get_url:
+        url: "https://dl.grafana.com/grafana/release/12.4.0/grafana_12.4.0_22325204712_linux_amd64.deb"
+        dest: "/tmp/grafana_12.4.0_22325204712_linux_amd64.deb"
+
+    - name: Install Grafana .deb package
+      ansible.builtin.apt:
+        deb: "/tmp/grafana_12.4.0_22325204712_linux_amd64.deb"
+        state: present
+
+    - name: Enable and start Grafana
+      ansible.builtin.service:
+        name: grafana-server
+        enabled: true
+        state: started
