@@ -21,6 +21,7 @@
         name: prometheus.prometheus.prometheus
       vars:
         prometheus_config_file: "{{ playbook_dir | dirname }}/monitoring/prometheus.yml.j2"
+        prometheus_storage_retention: "3d"
 
     - name: Install Tailscale
       ansible.builtin.shell: |
