@@ -8,19 +8,19 @@
     - "{{ playbook_dir }}/.env.yml"
 
   tasks:
-    # - name: Update System
-    #   ansible.builtin.apt:
-    #     update_cache: yes
+    - name: Update System
+      ansible.builtin.apt:
+        update_cache: yes
 
-    # - name: Upgrade System
-    #   ansible.builtin.apt:
-    #     upgrade: "yes"
+    - name: Upgrade System
+      ansible.builtin.apt:
+        upgrade: "yes"
 
-    # - name: Install and Configure Prometheus
-    #   ansible.builtin.include_role:
-    #     name: prometheus.prometheus.prometheus
-    #   vars:
-    #     prometheus_config_file: "{{ playbook_dir }}/templates/prometheus.yml.j2"
+    - name: Install and Configure Prometheus
+      ansible.builtin.include_role:
+        name: prometheus.prometheus.prometheus
+      vars:
+        prometheus_config_file: "{{ playbook_dir }}/templates/prometheus.yml.j2"
 
     - name: Install Tailscale
       ansible.builtin.shell: |
@@ -47,16 +47,10 @@
       ansible.builtin.set_fact:
         tailscale_auth_key: "{{ TAILSCALE_AUTH_KEY }}"
 
-    - name: Debug Auth Key
-      ansible.builtin.debug:
-        var: tailscale_auth_key
-
     - name: Tailscale up if not connected
       ansible.builtin.command: >
         tailscale up
         --authkey={{ tailscale_auth_key }}
         --advertise-exit-node
       become: true
-      async: 30
-      poll: 5
       when: ts_backend_state in ['NeedsLogin', 'Stopped', 'NoState']
