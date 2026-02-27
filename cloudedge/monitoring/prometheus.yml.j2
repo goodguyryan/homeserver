@@ -8,6 +8,11 @@ scrape_configs:
     scrape_interval: 30s
     static_configs:
       - targets: ["localhost:9090"]
+  
+  - job_name: "node-host"
+    scrape_interval: 30s
+    static_configs:
+      - targets: ["localhost:9100"]
       
   - job_name: "node-home"
     scrape_interval: 30s

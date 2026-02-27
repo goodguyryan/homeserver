@@ -56,6 +56,10 @@
         prometheus_config_file: "{{ playbook_dir | dirname }}/monitoring/prometheus.yml.j2"
         prometheus_storage_retention: "3d"
 
+    - name: Install and Configure Node-Exporter
+      ansible.builtin.include_role:
+        name: prometheus.node_exporter.node_exporter
+
     - name: Install Grafana Dependencies
       ansible.builtin.apt:
         name:
