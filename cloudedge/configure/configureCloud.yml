@@ -58,7 +58,7 @@
 
     - name: Install and Configure Node-Exporter
       ansible.builtin.include_role:
-        name: prometheus.node_exporter.node_exporter
+        name: prometheus.prometheus.node_exporter
 
     - name: Install Grafana Dependencies
       ansible.builtin.apt:
