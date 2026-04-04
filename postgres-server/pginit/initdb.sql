@@ -2,6 +2,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS expenses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid (),
+    telegram_user_id BIGINT,
     description TEXT NOT NULL,
     amount NUMERIC(12, 2) NOT NULL CHECK (amount >= 0),
     day INTEGER NOT NULL CHECK (
@@ -25,3 +26,6 @@ CREATE TABLE IF NOT EXISTS games (
     ),
     year INTEGER NOT NULL
 );
+
+ALTER TABLE expenses
+ADD COLUMN IF NOT EXISTS telegram_user_id BIGINT;
