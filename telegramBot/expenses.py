@@ -115,7 +115,6 @@ async def prompt_add_expense(update: Update, context: ContextTypes.DEFAULT_TYPE)
         "Example: lunch 5.50"
     )
 
-
 async def reply_this_month_total(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     _ = context
     query = update.callback_query
@@ -129,7 +128,7 @@ async def reply_this_month_total(update: Update, context: ContextTypes.DEFAULT_T
     total = compute_month_total(user.id, today.month, today.year)
     await query.message.reply_text(f"Total monthly expenses: ${total:.2f}")
 
-async def reply_grouped_expense_totals(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def reply_expense_history(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     _ = context
     query = update.callback_query
 
