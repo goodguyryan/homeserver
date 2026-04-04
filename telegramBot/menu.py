@@ -8,14 +8,16 @@ from telegram.ext import (
 
 from expenses import prompt_add_expense
 from expenses import reply_this_month_total
+from expenses import reply_expense_history
 from game import prompt_add_game
 from game import reply_total_net_amount
 
-MAIN_MENU, EXPENSES_MENU, GAMES_MENU= range(3)
+MAIN_MENU, EXPENSES_MENU, GAMES_MENU = range(3)
 
 CB_MAIN_EXPENSES = "main:expenses"
 CB_EXP_ADD = "exp:add"
 CB_EXP_THISMONTH = "exp:thismonth"
+CB_EXP_HISTORY = "exp:history"
 
 CB_MAIN_GAME = "main:game"
 CB_GAME_ADD = "game:add"
@@ -29,8 +31,8 @@ def keyboard_main() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         [
             [
-            InlineKeyboardButton("Expenses", callback_data=CB_MAIN_EXPENSES),
-            InlineKeyboardButton("Games", callback_data=CB_MAIN_GAME),
+                InlineKeyboardButton("Expenses", callback_data=CB_MAIN_EXPENSES),
+                InlineKeyboardButton("Games", callback_data=CB_MAIN_GAME),
             ],
             [InlineKeyboardButton("Close", callback_data=CB_CLOSE)],
         ]
@@ -43,6 +45,9 @@ def keyboard_expenses() -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton("Add", callback_data=CB_EXP_ADD),
                 InlineKeyboardButton("This Month", callback_data=CB_EXP_THISMONTH),
+            ],
+            [
+                InlineKeyboardButton("Expense History", callback_data=CB_EXP_HISTORY),
             ],
             [InlineKeyboardButton("⬅ Back", callback_data=CB_BACK_MAIN)],
         ]
@@ -60,25 +65,28 @@ def keyboard_games() -> InlineKeyboardMarkup:
         ]
     )
 
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     _ = context
     await update.message.reply_text("What would you like to do?", reply_markup=keyboard_main())
     return MAIN_MENU
 
 async def on_main_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    _=context
+    _ = context
     query = update.callback_query
     await query.answer()
 
     if query.data == CB_MAIN_EXPENSES:
-        await query.edit_message_text("Expenses: choose an action",
-                                      reply_markup=keyboard_expenses())
+        await query.edit_message_text(
+            "Expenses: choose an action",
+            reply_markup=keyboard_expenses()
+        )
         return EXPENSES_MENU
 
     if query.data == CB_MAIN_GAME:
-        await query.edit_message_text("Games: choose an action",
-                                      reply_markup=keyboard_games())
+        await query.edit_message_text(
+            "Games: choose an action",
+            reply_markup=keyboard_games()
+        )
         return GAMES_MENU
 
     await query.edit_message_text("What would you like to do?", reply_markup=keyboard_main())
@@ -103,6 +111,11 @@ async def on_expenses_choice(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     if query.data == CB_EXP_THISMONTH:
         await reply_this_month_total(update, context)
+        await query.edit_message_text("Menu closed. Type /start to open it again.")
+        return EXPENSES_MENU
+
+    if query.data == CB_EXP_HISTORY:
+        await reply_expense_history(update, context)
         await query.edit_message_text("Menu closed. Type /start to open it again.")
         return EXPENSES_MENU
 
@@ -139,6 +152,7 @@ async def close_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     await query.answer()
     await query.edit_message_text("Menu closed. Type /start to open it again.")
     return ConversationHandler.END
+
 
 def build_menu_conversation() -> ConversationHandler:
     return ConversationHandler(

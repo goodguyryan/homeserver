@@ -1,5 +1,6 @@
 import os
 import datetime
+import calendar
 import psycopg
 from psycopg.rows import dict_row
 from telegram import Update
@@ -37,6 +38,7 @@ def parse_expense_text(text: str) -> tuple[str, float]:
 
     return description, amount
 
+
 def insert_expense(telegram_user_id: int, description: str, amount: float) -> None:
     today = datetime.datetime.now().date()
     with get_db_connection() as conn:
@@ -49,6 +51,7 @@ def insert_expense(telegram_user_id: int, description: str, amount: float) -> No
                 (telegram_user_id, description, amount, today.day, today.month, today.year),
             )
         conn.commit()
+
 
 def fetch_month_expenses(telegram_user_id: int, month: int, year: int) -> list[dict]:
     with get_db_connection() as conn:
@@ -65,9 +68,43 @@ def fetch_month_expenses(telegram_user_id: int, month: int, year: int) -> list[d
             )
             return cur.fetchall()
 
+
 def compute_month_total(telegram_user_id: int, month: int, year: int) -> float:
     expenses = fetch_month_expenses(telegram_user_id, month, year)
     return float(sum(e["amount"] for e in expenses))
+
+
+def fetch_expense_totals_grouped_by_month(telegram_user_id: int) -> list[dict]:
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                    year,
+                    month,
+                    SUM(amount) AS total_amount
+                FROM expenses
+                WHERE telegram_user_id = %s
+                GROUP BY year, month
+                ORDER BY year DESC, month DESC
+                """,
+                (telegram_user_id,),
+            )
+            return cur.fetchall()
+
+
+def format_expense_totals_grouped_by_month(rows: list[dict]) -> str:
+    if not rows:
+        return "No expenses found."
+
+    lines = []
+    for row in rows:
+        month_name = calendar.month_abbr[row["month"]].lower()
+        total_amount = float(row["total_amount"])
+        lines.append(f"{month_name} {row['year']}: ${total_amount:.2f}")
+
+    return "\n".join(lines)
+
 
 async def prompt_add_expense(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     query = update.callback_query
@@ -77,6 +114,7 @@ async def prompt_add_expense(update: Update, context: ContextTypes.DEFAULT_TYPE)
         "Type: <description> <amount>\n"
         "Example: lunch 5.50"
     )
+
 
 async def reply_this_month_total(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     _ = context
@@ -90,6 +128,19 @@ async def reply_this_month_total(update: Update, context: ContextTypes.DEFAULT_T
     today = datetime.datetime.now().date()
     total = compute_month_total(user.id, today.month, today.year)
     await query.message.reply_text(f"Total monthly expenses: ${total:.2f}")
+
+async def reply_grouped_expense_totals(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    _ = context
+    query = update.callback_query
+
+    user = update.effective_user
+    if user is None:
+        await query.message.reply_text("Could not determine your Telegram user.")
+        return
+
+    rows = fetch_expense_totals_grouped_by_month(user.id)
+    message = format_expense_totals_grouped_by_month(rows)
+    await query.message.reply_text(message)
 
 async def handle_typed_expense_if_waiting(
     update: Update,
