@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { projects } from "@/data/projects";
 import ProjectCard from "./ProjectCard";
 import ScrollFadeIn from "./ScrollFadeIn";
@@ -16,12 +17,23 @@ export default function Projects() {
         </ScrollFadeIn>
 
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project, i) => (
+          {projects.slice(0, 3).map((project, i) => (
             <ScrollFadeIn key={project.title} delay={i * 0.1}>
               <ProjectCard project={project} />
             </ScrollFadeIn>
           ))}
         </div>
+
+        <ScrollFadeIn delay={0.3}>
+          <div className="mt-10 flex justify-center">
+            <Link
+              href="/projects"
+              className="inline-flex h-12 items-center justify-center rounded-lg bg-accent px-6 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+            >
+              See More →
+            </Link>
+          </div>
+        </ScrollFadeIn>
       </div>
     </section>
   );
