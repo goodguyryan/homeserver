@@ -8,11 +8,6 @@ variable "region" {
   default = "sgp1"
 }
 
-variable "droplet_name" {
-  type    = string
-  default = "tf-demo-vm"
-}
-
 variable "ssh_key_name" {
   type        = string
   description = "Name of the SSH key as it appears in your DigitalOcean account"
@@ -26,4 +21,17 @@ variable "droplet_size" {
 variable "image" {
   type    = string
   default = "ubuntu-22-04-x64"
+}
+
+variable "droplets" {
+  type = map(object({
+    name   = string
+    size   = optional(string)
+    region = optional(string)
+    image  = optional(string)
+  }))
+  default = {
+    "vm1" = { name = "tf-demo-vm" }
+    "vm2" = { name = "test-hermes" }
+  }
 }
