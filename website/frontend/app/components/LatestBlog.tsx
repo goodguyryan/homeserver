@@ -32,7 +32,7 @@ export default function LatestBlog({ posts }: { posts: BlogMeta[] }) {
               href="/blog"
               className="inline-flex h-12 items-center justify-center rounded-lg bg-accent px-6 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
             >
-              See More ?
+              See More →
             </Link>
           </div>
         </ScrollFadeIn>
