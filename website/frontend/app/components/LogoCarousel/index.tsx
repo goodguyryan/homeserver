@@ -7,14 +7,14 @@ import { logos } from "./logos";
 const LOGO_WIDTH = 25;
 const GAP_WIDTH = 24;
 const TOTAL_PER_LOGO = LOGO_WIDTH + GAP_WIDTH;
-const SCROLL_DISTANCE = -(logos.length * TOTAL_PER_LOGO);
+const SCROLL_DISTANCE = (logos.length * TOTAL_PER_LOGO);
 const CYCLE_DURATION = logos.length * 2;
 
 export default function LogoCarousel() {
-  const scrollX = useMotionValue(0);
+  const scrollX = useMotionValue(-SCROLL_DISTANCE);
 
   useEffect(() => {
-    const controls = animate(scrollX, SCROLL_DISTANCE, {
+    const controls = animate(scrollX, 0, {
       duration: CYCLE_DURATION,
       ease: "linear",
       repeat: Infinity,
