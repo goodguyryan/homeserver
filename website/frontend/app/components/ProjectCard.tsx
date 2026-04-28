@@ -1,6 +1,6 @@
-import { Project } from "@/data/projects";
+import { ProjectMeta } from "@/lib/content";
 
-export default function ProjectCard({ project }: { project: Project }) {
+export default function ProjectCard({ project }: { project: ProjectMeta }) {
   return (
     <div className="flex flex-col rounded-lg border border-border bg-surface p-5 transition-colors hover:border-muted">
       <div className="flex h-32 items-center justify-center rounded-md bg-background text-3xl text-muted">

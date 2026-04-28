@@ -1,3 +1,5 @@
+import { getAllProjects } from "@/lib/content";
+import { getAllBlogPosts } from "@/lib/content";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
 import About from "./components/About";
@@ -7,7 +9,9 @@ import Projects from "./components/Projects";
 import LatestBlog from "./components/LatestBlog";
 import Contact from "./components/Contact";
 
-export default function Home() {
+export default async function Home() {
+  const projects = getAllProjects();
+  const blogPosts = getAllBlogPosts();
   return (
     <>
       <Navbar />
@@ -16,8 +20,8 @@ export default function Home() {
         <About />
         <Skills />
         <Experience />
-        <Projects />
-        <LatestBlog />
+        <Projects projects={projects.slice(0, 3)} />
+        <LatestBlog posts={blogPosts} />
         <Contact />
       </main>
     </>

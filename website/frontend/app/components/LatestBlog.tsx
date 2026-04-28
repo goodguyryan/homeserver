@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { blogPosts } from "@/data/blog";
+import { BlogMeta } from "@/lib/content";
+import BlogCard from "./BlogCard";
 import ScrollFadeIn from "./ScrollFadeIn";
 
-export default function LatestBlog() {
+export default function LatestBlog({ posts }: { posts: BlogMeta[] }) {
   return (
     <section className="px-6 py-24">
       <div className="mx-auto max-w-4xl">
@@ -17,19 +18,13 @@ export default function LatestBlog() {
           </p>
         </ScrollFadeIn>
 
-        <div className="mt-12 flex flex-col gap-6">
-          {blogPosts.map((post, i) => (
-            <ScrollFadeIn key={post.slug} delay={i * 0.1}>
-              <div className="rounded-lg border border-border bg-surface p-5 transition-colors hover:border-muted">
-                <span className="text-xs text-accent">{post.date}</span>
-                <h3 className="mt-1 text-base font-semibold">{post.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-muted">
-                  {post.excerpt}
-                </p>
-              </div>
-            </ScrollFadeIn>
-          ))}
-        </div>
+        <ScrollFadeIn delay={0.1}>
+          <div className="mt-12 flex flex-col gap-6">
+            {posts.map((post) => (
+              <BlogCard key={post.slug} post={post} />
+            ))}
+          </div>
+        </ScrollFadeIn>
 
         <ScrollFadeIn delay={0.3}>
           <div className="mt-10 flex justify-center">
@@ -37,7 +32,7 @@ export default function LatestBlog() {
               href="/blog"
               className="inline-flex h-12 items-center justify-center rounded-lg bg-accent px-6 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
             >
-              See More →
+              See More ?
             </Link>
           </div>
         </ScrollFadeIn>

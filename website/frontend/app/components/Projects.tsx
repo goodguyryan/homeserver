@@ -1,11 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { projects } from "@/data/projects";
+import { ProjectMeta } from "@/lib/content";
 import ProjectCard from "./ProjectCard";
 import ScrollFadeIn from "./ScrollFadeIn";
 
-export default function Projects() {
+export default function Projects({ projects }: { projects: ProjectMeta[] }) {
   return (
     <section id="projects" className="px-6 py-24">
       <div className="mx-auto max-w-6xl">
@@ -17,7 +17,7 @@ export default function Projects() {
         </ScrollFadeIn>
 
         <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.slice(0, 3).map((project, i) => (
+          {projects.map((project, i) => (
             <ScrollFadeIn key={project.title} delay={i * 0.1}>
               <ProjectCard project={project} />
             </ScrollFadeIn>
