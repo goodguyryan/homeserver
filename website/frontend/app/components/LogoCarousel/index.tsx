@@ -31,9 +31,13 @@ export default function LogoCarousel() {
         {displayLogos.map((logo, index) => (
           <div
             key={`${logo.id}-${index}`}
-            className="w-[25px] h-[25px] flex items-center justify-center text-muted"
+            className="w-[25px] h-[25px] flex items-center justify-center shrink-0"
           >
-            {logo.svg}
+            <img
+              src={logo.src}
+              alt={logo.ariaLabel}
+              className="h-[25px] w-[25px]"
+            />
           </div>
         ))}
       </motion.div>

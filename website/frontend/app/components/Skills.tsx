@@ -14,7 +14,7 @@ export default function Skills() {
           </p>
         </ScrollFadeIn>
 
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-12 grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
           {skills.map((group, i) => (
             <ScrollFadeIn key={group.category} delay={i * 0.1}>
               <div className="rounded-lg border border-border bg-surface p-6">
@@ -24,10 +24,15 @@ export default function Skills() {
                 <ul className="mt-4 flex flex-wrap gap-2">
                   {group.items.map((item) => (
                     <li
-                      key={item}
-                      className="rounded-md bg-background px-3 py-1 text-xs text-muted"
+                      key={item.name}
+                      className="flex items-center gap-1.5 rounded-md bg-background px-3 py-1 text-xs text-muted"
                     >
-                      {item}
+                      <img
+                        src={item.icon}
+                        alt=""
+                        className="h-4 w-4"
+                      />
+                      {item.name}
                     </li>
                   ))}
                 </ul>
