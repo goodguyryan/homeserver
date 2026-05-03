@@ -34,11 +34,10 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${
-        scrolled || pathname !== "/"
-          ? "bg-[#0a0a0a]/90 backdrop-blur-md border-b border-border"
-          : "bg-transparent"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-colors duration-300 ${scrolled || pathname !== "/"
+        ? "bg-[#0a0a0a]/90 backdrop-blur-md border-b border-border"
+        : "bg-transparent"
+        }`}
     >
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
         <Link
@@ -58,18 +57,17 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm transition-colors ${
-                  isActive
-                    ? "text-foreground"
-                    : "text-muted hover:text-foreground"
-                }`}
+                className={`text-sm transition-colors ${isActive
+                  ? "text-foreground"
+                  : "text-muted hover:text-foreground"
+                  }`}
               >
                 {link.label}
               </Link>
             );
           })}
           <a
-            href="https://github.com"
+            href="https://github.com/goodguyryan"
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-muted hover:text-foreground transition-colors"
@@ -118,18 +116,17 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`text-sm transition-colors ${
-                    isActive
-                      ? "text-foreground"
-                      : "text-muted hover:text-foreground"
-                  }`}
+                  className={`text-sm transition-colors ${isActive
+                    ? "text-foreground"
+                    : "text-muted hover:text-foreground"
+                    }`}
                 >
                   {link.label}
                 </Link>
               );
             })}
             <a
-              href="https://github.com"
+              href="https://github.com/goodguyryan"
               target="_blank"
               rel="noopener noreferrer"
               className="text-sm text-muted hover:text-foreground transition-colors"

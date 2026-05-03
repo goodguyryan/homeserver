@@ -53,7 +53,7 @@ export default function Hero() {
             Download Resume
           </a>
           <a
-            href="#contacts"
+            href="#contact"
             className="inline-flex h-12 items-center justify-center rounded-lg border border-border px-6 text-sm font-medium text-foreground transition-colors hover:border-muted hover:bg-surface"
           >
             Get in Touch
