@@ -25,16 +25,18 @@ export default function Hero() {
           transition={{ duration: 0.5, delay: 0.15, ease: "easeOut" }}
           className="mt-4 text-lg text-accent sm:text-xl"
         >
-          DevOps / Cloud Engineer
+          Software Engineer aspiring towards DevOps and Platform Engineering
         </motion.p>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
-          className="mx-auto mt-6 max-w-lg text-base leading-relaxed text-muted"
+          className="mx-auto mt-6 max-w-[650px] text-base leading-relaxed text-muted"
         >
-          Building reliable infrastructure and scalable cloud solutions.
+          I build backend systems, infrastructure automation, CI/CD workflows,
+          and internal tools that help software ship safely, run reliably, and
+          scale with confidence.
         </motion.p>
 
         <motion.div
@@ -51,7 +53,7 @@ export default function Hero() {
             Download Resume
           </a>
           <a
-            href="#contact"
+            href="#contacts"
             className="inline-flex h-12 items-center justify-center rounded-lg border border-border px-6 text-sm font-medium text-foreground transition-colors hover:border-muted hover:bg-surface"
           >
             Get in Touch

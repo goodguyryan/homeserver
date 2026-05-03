@@ -16,9 +16,9 @@ export default function Contact() {
         <div className="mt-10 flex flex-row items-center justify-center gap-8">
           {[
             {
-              href: "mailto:hello@ryanngjk.dev",
+              href: "mailto:ryannggjk@google.com",
               label: "Email",
-              value: "hello@ryanngjk.dev",
+              value: "ryanngjk@google.com",
               icon: (
                 <svg
                   className="h-10 w-10 text-accent transition-colors hover:text-foreground"
@@ -36,7 +36,7 @@ export default function Contact() {
               ),
             },
             {
-              href: "https://github.com",
+              href: "https://github.com/goodguyryan",
               label: "GitHub",
               value: "github.com",
               external: true,
@@ -51,7 +51,7 @@ export default function Contact() {
               ),
             },
             {
-              href: "https://linkedin.com",
+              href: "https://linkedin.com/in/ryanngjk",
               label: "LinkedIn",
               value: "linkedin.com",
               external: true,

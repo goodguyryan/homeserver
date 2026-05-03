@@ -20,26 +20,31 @@ export default function About() {
           <ScrollFadeIn delay={0.2}>
             <div className="flex flex-col gap-6 text-center md:text-left">
               <p className="text-base leading-relaxed text-muted">
-                Hi, I&apos;m Ryan — a DevOps and Cloud Engineer with a passion
-                for building reliable, automated infrastructure. I enjoy working
-                across the stack, from container orchestration to CI/CD pipelines,
-                and everything in between.
+                Hi I&apos;m Ryan, a software engineer aspiring toward DevOps and Platform Engineering.
+                I enjoy building automation, infrastructure tooling, CI/CD workflows, and
+                backend systems that make software easier to deploy, operate, and scale.
               </p>
               <p className="text-base leading-relaxed text-muted">
-                When I&apos;m not engineering cloud solutions, you&apos;ll find me
-                tinkering with home lab setups, contributing to open-source
-                projects, or exploring new tools to streamline development
-                workflows.
+                My experience includes automating server administration with
+                Ansible, building VM-based CI/CD workflows and deploying Dockerized
+                services on homelab infrastructure. Across these projects, I&apos;m
+                most interested in making systems easier to operate, safer to
+                deploy, and more reliable for the teams that depend on them.
+              </p>
+              <p className="text-base leading-relaxed text-muted">
+                As a Computer Engineer, I also enjoy exploring low-level systems from time to time,
+                which gives me a deeper appreciation for how systems and infrastructure work beneath
+                the abstractions we use every day.
               </p>
 
               <ul className="flex flex-col gap-2 text-sm text-muted">
                 <li className="flex items-start gap-2 md:items-center">
                   <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-accent md:mt-0" />
-                  Specializing in cloud infrastructure and containerization
+                  Specializing in DevOps, Platform Engineering, and Reliability
                 </li>
                 <li className="flex items-start gap-2 md:items-center">
                   <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-accent md:mt-0" />
-                  Passionate about automation and Infrastructure as Code
+                  Passionate about Automation and Infrastructure as Code
                 </li>
                 <li className="flex items-start gap-2 md:items-center">
                   <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-accent md:mt-0" />
