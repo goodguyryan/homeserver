@@ -6,6 +6,19 @@ const nextConfig: NextConfig = {
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
 };
 
-const withMDX = createMDX();
+const withMDX = createMDX({
+  options: {
+    remarkPlugins: ["remark-frontmatter", "remark-mdx-frontmatter", "remark-gfm"],
+    rehypePlugins: [
+      [
+        "rehype-pretty-code",
+        {
+          theme: "github-dark",
+          keepBackground: true,
+        },
+      ],
+    ],
+  },
+});
 
 export default withMDX(nextConfig);

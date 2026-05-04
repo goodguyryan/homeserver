@@ -18,12 +18,14 @@ export default function ProjectsPage() {
               <ProjectCard key={project.slug} project={project} />
             ))}
           </div>
-          <Link
-            href="/"
-            className="mt-10 inline-flex h-12 items-center justify-center rounded-lg border border-border px-6 text-sm font-medium text-foreground transition-colors hover:border-muted hover:bg-surface"
-          >
-            ← Back to Home
-          </Link>
+          <div className="mt-10 flex justify-end">
+            <Link
+              href="/"
+              className="inline-flex h-12 items-center justify-center rounded-lg border border-border px-6 text-sm font-medium text-foreground transition-colors hover:border-muted hover:bg-surface"
+            >
+              ← Back to Home
+            </Link>
+          </div>
         </div>
       </main>
     </>
