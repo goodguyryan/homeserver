@@ -10,7 +10,7 @@ export default function Skills() {
         <ScrollFadeIn>
           <h2 className="text-center text-2xl font-bold sm:text-3xl">Skills</h2>
           <p className="mx-auto mt-4 max-w-md text-center text-sm text-muted">
-            Technologies and tools I work with day-to-day.
+            Technologies and tools I have worked with.
           </p>
         </ScrollFadeIn>
 

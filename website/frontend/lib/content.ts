@@ -9,6 +9,7 @@ export interface BlogMeta {
   date: string;
   excerpt: string;
   slug: string;
+  featured: boolean;
 }
 
 export interface ProjectMeta {
@@ -18,6 +19,7 @@ export interface ProjectMeta {
   githubUrl?: string;
   liveUrl?: string;
   slug: string;
+  order: number;
 }
 
 export function getAllBlogPosts(): BlogMeta[] {
@@ -39,6 +41,7 @@ export function getAllBlogPosts(): BlogMeta[] {
       date: data.date,
       excerpt: data.excerpt,
       slug: data.slug,
+      featured: data.featured ?? false,
     };
   });
 
@@ -66,10 +69,11 @@ export function getAllProjects(): ProjectMeta[] {
       githubUrl: data.githubUrl,
       liveUrl: data.liveUrl,
       slug: data.slug,
+      order: data.order,
     };
   });
 
-  return projects;
+  return projects.sort((a, b) => a.order - b.order);
 }
 
 export function getAllBlogSlugs(): string[] {

@@ -9,9 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Ryan — DevOps / Cloud Engineer",
+  title: "Ryan — Software/Devops Engineer",
   description:
-    "Personal portfolio of Ryan — DevOps and Cloud Engineer. Building reliable infrastructure and scalable cloud solutions.",
+    "Personal portfolio of Ryan — Software and DevOps Engineer. Building reliable infrastructure and scalable automated solutions.",
 };
 
 export default function RootLayout({

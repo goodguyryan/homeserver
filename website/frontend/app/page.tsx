@@ -21,7 +21,7 @@ export default async function Home() {
         <Skills />
         <Experience />
         <Projects projects={projects.slice(0, 3)} />
-        <LatestBlog posts={blogPosts} />
+        <LatestBlog posts={blogPosts.filter(p => p.featured).slice(0, 3)} />
         <Contact />
       </main>
     </>
