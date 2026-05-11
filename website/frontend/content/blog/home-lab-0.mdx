@@ -1,10 +1,67 @@
 ---
-title: "Setting Up a Home Lab with Docker Compose"
+title: "My Home Lab So Far"
 date: "May 2026"
-excerpt: "hi"
-slug: "home-lab-docker-compose"
+excerpt: "What I run at home — an old laptop, a cheap cloud VM, and a bunch of Docker containers."
+slug: "home-lab-0"
 featured: true
 ---
 
-Content coming soon.
+I've been running a home lab for a while now, and it's reached a point where I'm happy with the architecture. This post is a walkthrough of what I have set up, why I made the choices I did, and how it all fits together.
+
+## The Hardware
+
+There are two machines:
+
+- **An old laptop** — this is the workhorse. It runs all the Docker services.
+- **A DigitalOcean droplet** — the cheapest one (`s-1vcpu-1gb` in `sgp1`). It doesn't run any applications. It handles monitoring (Prometheus + Grafana) and a Cloudflare tunnel that routes public traffic to the laptop.
+
+The laptop stays at home behind a NAT. The droplet gives me a public-facing entry point without having to open any ports on my home network.
+
+## Networking
+
+Two things make the networking work:
+
+1. **Tailscale** — both machines are on the same Tailnet. The droplet is set up as an exit node. Prometheus on the droplet scrapes Node Exporter metrics from the laptop over Tailscale (it shows up as `fedora:9100` in the config). The GitHub Actions runner also uses Tailscale to SSH into the laptop for deployments.
+
+2. **Cloudflare Tunnel** — instead of exposing the laptop directly, a Cloudflare tunnel on the droplet forwards incoming traffic on my domain (`ryanngjk.dev`) to the Nginx reverse proxy running on the laptop. No open ports, no dynamic DNS, no port forwarding.
+
+## The Services
+
+Everything on the laptop runs in Docker Compose with a shared network. Here's what's containerized:
+
+- **Postgres 18** — the central database. It holds tables for expenses and games that the Telegram bot writes to. An init container runs the schema migrations on startup.
+- **Telegram Bot** — a Python bot built with `python-telegram-bot`. Two features right now: an **expense tracker** where I log spending and view monthly totals, and a **game tracker** where I log gambling net amounts. Both persist to Postgres.
+- **Nginx** — the reverse proxy on port 80. It routes traffic by domain:
+  - `ryanngjk.dev` → static frontend
+  - `oe.ryanngjk.dev` → serving Next.js app for Operation Einstein
+- **Website frontend/backend** — the frontend is a static site served by Nginx, and the backend is a minimal Flask app. Both are mounted read-only into their containers.
+
+The online education subdomains I use are a separate project that also runs on the laptop — the Nginx config proxies to their Next.js containers with WebSocket support for hot module replacement.
+
+## Monitoring
+
+The droplet handles observability:
+
+- **Prometheus** scrapes three targets: itself, the droplet's Node Exporter, and the laptop's Node Exporter (over Tailscale).
+- **Node Exporter** runs as a Docker container on both machines with host mounts for `/proc`, `/sys`, and `/`.
+- **Grafana** is installed natively on the droplet (not containerized) and visualizes the Prometheus data.
+
+All of this is provisioned by an Ansible playbook that installs Tailscale, Prometheus, Node Exporter, and Grafana on the droplet from a fresh Ubuntu image.
+
+## Infrastructure as Code
+
+- **Terraform** provisions the DigitalOcean droplet (defined in `cloudedge/infra/`).
+- **Ansible** configures the droplet after it's created — system updates, Tailscale, monitoring stack (`cloudedge/configure/configureCloud.yml`).
+- **GitHub Actions** handles CI/CD: on every push to `main`, it builds the Telegram bot image, lints it with Pylint, runs tests, then connects to Tailscale, SSHs into the laptop, pulls the latest code, and redeploys with `docker compose up -d --build`.
+
+## What I'd Change
+
+The setup works, but there are a few things I want to improve:
+
+- **SSL/TLS** — right now Nginx listens on port 80. The Cloudflare tunnel handles HTTPS on their end, but I should add TLS between the tunnel and Nginx.
+- **Backups** — I don't have automated Postgres backups yet. That's a ticking time bomb.
+- **Secrets management** — I'm using `.env` files. It works for now but doesn't scale well.
+- **The Flask backend** — it's still a placeholder. I need to actually build something useful there.
+
+Overall though, I'm happy with where things are. An old laptop and a $6/month droplet is enough to run a surprisingly useful set of services.
 
