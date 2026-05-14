@@ -16,8 +16,7 @@ export interface ProjectMeta {
   title: string;
   description: string;
   tags: string[];
-  githubUrl?: string;
-  liveUrl?: string;
+  link?: string;
   slug: string;
   order: number;
 }
@@ -66,8 +65,7 @@ export function getAllProjects(): ProjectMeta[] {
       title: data.title,
       description: data.description,
       tags: data.tags,
-      githubUrl: data.githubUrl,
-      liveUrl: data.liveUrl,
+      link: data.link,
       slug: data.slug,
       order: data.order,
     };
