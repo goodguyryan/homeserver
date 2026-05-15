@@ -10,6 +10,11 @@ interface Ripple {
   maxRadius: number;
 }
 
+interface VelocitySample {
+  delta: number;
+  time: number;
+}
+
 interface VinylState {
   rotation: number;
   rotationSpeed: number;
@@ -17,9 +22,10 @@ interface VinylState {
   hoverY: number;
   isHovering: boolean;
   isDragging: boolean;
-  dragAngle: number;
-  dragOffset: number;
+  isReturning: boolean;
+  dragVelocity: number;
   lastPointerAngle: number;
+  velocitySamples: VelocitySample[];
   ripples: Ripple[];
   time: number;
   targetSpeed: number;
@@ -27,9 +33,11 @@ interface VinylState {
 
 const IDLE_SPEED = 0.5;
 const HOVER_SPEED = 0.7;
-const DRAG_RETURN_LERP = 0.04;
-const SPEED_LERP = 0.03;
+const RETURN_LERP = 0.015;
+const SPEED_LERP = 0.06;
 const MAX_RIPPLES = 6;
+const MAX_FLING_SPEED = 8;
+const VELOCITY_SAMPLE_COUNT = 3;
 
 export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -40,9 +48,10 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
     hoverY: 0,
     isHovering: false,
     isDragging: false,
-    dragAngle: 0,
-    dragOffset: 0,
+    isReturning: false,
+    dragVelocity: 0,
     lastPointerAngle: 0,
+    velocitySamples: [],
     ripples: [],
     time: 0,
     targetSpeed: IDLE_SPEED,
@@ -102,16 +111,29 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
       const s = stateRef.current;
       s.time += dt;
 
-      s.rotationSpeed += (s.targetSpeed - s.rotationSpeed) * SPEED_LERP;
-
-      if (!prefersReducedMotion.current) {
+      if (prefersReducedMotion.current) {
+        // idle only, no drag/fling
+        s.rotationSpeed += (s.targetSpeed - s.rotationSpeed) * SPEED_LERP;
         s.rotation += s.rotationSpeed * dt;
-      }
+      } else if (s.isDragging) {
+        // idle paused, rotation driven by pointer events + dragVelocity
+        s.rotation += s.dragVelocity * dt;
+      } else if (s.isReturning) {
+        // fling momentum then ease back to target speed
+        const speedDiff = s.targetSpeed - s.dragVelocity;
+        s.dragVelocity += speedDiff * RETURN_LERP;
 
-      s.dragOffset *= 1 - DRAG_RETURN_LERP;
+        s.rotation += s.dragVelocity * dt;
 
-      if (Math.abs(s.dragOffset) < 0.0005) {
-        s.dragOffset = 0;
+        if (Math.abs(s.dragVelocity - s.targetSpeed) < 0.01) {
+          s.dragVelocity = 0;
+          s.isReturning = false;
+          s.rotationSpeed = s.targetSpeed;
+        }
+      } else {
+        // normal idle
+        s.rotationSpeed += (s.targetSpeed - s.rotationSpeed) * SPEED_LERP;
+        s.rotation += s.rotationSpeed * dt;
       }
 
       s.ripples = s.ripples.filter((r) => {
@@ -142,11 +164,10 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
 
       ctx.save();
       ctx.translate(cx, cy);
-      ctx.rotate(s.rotation + s.dragOffset);
+      ctx.rotate(s.rotation);
 
       const grooveCount = 22;
       const labelR = outerR * 0.3;
-      const spindleR = outerR * 0.04;
 
       for (let i = 0; i < grooveCount; i++) {
         const t = (i + 1) / (grooveCount + 1);
@@ -156,8 +177,10 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
         const pulse = Math.sin(pulsePhase) * 0.015;
         let r = baseR * (1 + pulse);
 
-        if (s.isDragging && Math.abs(s.dragOffset) > 0.005) {
-          const warpStrength = Math.abs(s.dragOffset) * 80;
+        const dragActive = s.isDragging || s.isReturning;
+        const dragMag = Math.abs(s.dragVelocity);
+        if (dragActive && dragMag > 0.3) {
+          const warpStrength = Math.min(dragMag, 4) * 5;
           r += Math.sin(i * 0.7 + s.time * 3) * warpStrength * t;
         }
 
@@ -175,7 +198,7 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
 
       ctx.save();
       ctx.translate(cx, cy);
-      ctx.rotate(s.rotation + s.dragOffset);
+      ctx.rotate(s.rotation);
 
       const labelGrad = ctx.createRadialGradient(
         -labelR * 0.2,
@@ -235,7 +258,7 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
 
       ctx.save();
       ctx.translate(cx, cy);
-      ctx.rotate(s.rotation + s.dragOffset);
+      ctx.rotate(s.rotation);
 
       const sheenAngle = s.time * 0.15;
       const sheenX = Math.cos(sheenAngle) * outerR * 0.3;
@@ -288,8 +311,10 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
         ctx.fill();
       }
 
-      if (s.isDragging && Math.abs(s.dragOffset) > 0.005) {
-        const dragIntensity = Math.min(Math.abs(s.dragOffset) * 15, 0.15);
+      const dragActive = s.isDragging || s.isReturning;
+      const dragMag = Math.abs(s.dragVelocity);
+      if (dragActive && dragMag > 0.3) {
+        const dragIntensity = Math.min(dragMag / MAX_FLING_SPEED, 0.15);
         const dragGrad = ctx.createRadialGradient(cx, cy, labelR, cx, cy, outerR);
         dragGrad.addColorStop(0, "rgba(168, 85, 247, 0)");
         dragGrad.addColorStop(0.5, `rgba(168, 85, 247, ${dragIntensity * 0.3})`);
@@ -376,17 +401,40 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
   const handlePointerEnter = useCallback(() => {
     const s = stateRef.current;
     s.isHovering = true;
-    s.targetSpeed = HOVER_SPEED;
+    if (!s.isDragging && !s.isReturning) {
+      s.targetSpeed = HOVER_SPEED;
+    }
   }, []);
 
   const handlePointerLeave = useCallback(() => {
     const s = stateRef.current;
     s.isHovering = false;
-    s.isDragging = false;
+    if (s.isDragging) {
+      s.isDragging = false;
+      const avgVel = computeAverageVelocity(s.velocitySamples);
+      s.dragVelocity = Math.max(-MAX_FLING_SPEED, Math.min(MAX_FLING_SPEED, avgVel));
+      s.isReturning = true;
+      s.velocitySamples = [];
+    }
     s.targetSpeed = IDLE_SPEED;
     s.hoverX = 0;
     s.hoverY = 0;
   }, []);
+
+  const computeAverageVelocity = (samples: VelocitySample[]): number => {
+    if (samples.length === 0) return 0;
+    const now = performance.now();
+    const recent = samples.filter((s) => now - s.time < 150);
+    if (recent.length === 0) return 0;
+    let totalDelta = 0;
+    let totalTime = 0;
+    for (let i = 1; i < recent.length; i++) {
+      totalDelta += recent[i].delta;
+      totalTime += (recent[i].time - recent[i - 1].time) / 1000;
+    }
+    if (totalTime <= 0) return recent[recent.length - 1].delta * 10;
+    return totalDelta / totalTime;
+  };
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -401,7 +449,15 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
         let delta = angle - s.lastPointerAngle;
         if (delta > Math.PI) delta -= Math.PI * 2;
         if (delta < -Math.PI) delta += Math.PI * 2;
-        s.dragOffset += delta;
+
+        s.rotation += delta;
+        s.dragVelocity = delta / Math.max(0.001, 0.016);
+
+        s.velocitySamples.push({ delta, time: performance.now() });
+        if (s.velocitySamples.length > VELOCITY_SAMPLE_COUNT * 2) {
+          s.velocitySamples = s.velocitySamples.slice(-VELOCITY_SAMPLE_COUNT);
+        }
+
         s.lastPointerAngle = angle;
       }
     },
@@ -428,6 +484,9 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
       });
 
       s.isDragging = true;
+      s.isReturning = false;
+      s.dragVelocity = 0;
+      s.velocitySamples = [];
       s.lastPointerAngle = getPointerAngle(e.clientX, e.clientY, rect);
       e.currentTarget.setPointerCapture(e.pointerId);
     },
@@ -438,6 +497,11 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
     const s = stateRef.current;
     s.isDragging = false;
     s.targetSpeed = s.isHovering ? HOVER_SPEED : IDLE_SPEED;
+
+    const avgVel = computeAverageVelocity(s.velocitySamples);
+    s.dragVelocity = Math.max(-MAX_FLING_SPEED, Math.min(MAX_FLING_SPEED, avgVel));
+    s.isReturning = true;
+    s.velocitySamples = [];
   }, []);
 
   return (
