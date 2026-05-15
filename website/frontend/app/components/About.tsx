@@ -1,6 +1,7 @@
 "use client";
 
 import ScrollFadeIn from "./ScrollFadeIn";
+import LiquidVinylOrb from "./LiquidVinylOrb";
 
 export default function About() {
   return (
@@ -12,9 +13,7 @@ export default function About() {
 
         <div className="mt-12 flex flex-col items-center gap-12 md:flex-row md:items-start">
           <ScrollFadeIn delay={0.1}>
-            <div className="flex h-48 w-48 shrink-0 items-center justify-center rounded-full bg-surface border border-border text-5xl text-muted">
-              R
-            </div>
+            <LiquidVinylOrb size={192} />
           </ScrollFadeIn>
 
           <ScrollFadeIn delay={0.2}>
