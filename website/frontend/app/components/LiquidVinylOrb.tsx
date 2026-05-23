@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
+import { useTheme } from "next-themes";
 
 interface Ripple {
   x: number;
@@ -39,8 +40,27 @@ const MAX_RIPPLES = 6;
 const MAX_FLING_SPEED = 8;
 const VELOCITY_SAMPLE_COUNT = 3;
 
+const DARK_SURFACE = { inner: "#f5f5f5", mid: "#e8e8e8", outer: "#d4d4d4" };
+const LIGHT_SURFACE = { inner: "#1a1a1a", mid: "#111111", outer: "#0a0a0a" };
+
+function computeAverageVelocity(samples: VelocitySample[]): number {
+  if (samples.length === 0) return 0;
+  const now = performance.now();
+  const recent = samples.filter((s) => now - s.time < 150);
+  if (recent.length === 0) return 0;
+  let totalDelta = 0;
+  let totalTime = 0;
+  for (let i = 1; i < recent.length; i++) {
+    totalDelta += recent[i].delta;
+    totalTime += (recent[i].time - recent[i - 1].time) / 1000;
+  }
+  if (totalTime <= 0) return recent[recent.length - 1].delta * 10;
+  return totalDelta / totalTime;
+}
+
 export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const themeRef = useRef<string>("dark");
   const stateRef = useRef<VinylState>({
     rotation: 0,
     rotationSpeed: IDLE_SPEED,
@@ -58,6 +78,14 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
   });
   const rafRef = useRef<number>(0);
   const prefersReducedMotion = useRef(false);
+
+  const { resolvedTheme } = useTheme();
+
+  useEffect(() => {
+    if (resolvedTheme) {
+      themeRef.current = resolvedTheme;
+    }
+  }, [resolvedTheme]);
 
   const getPointerAngle = useCallback(
     (clientX: number, clientY: number, rect: DOMRect) => {
@@ -109,17 +137,17 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
       lastTime = timestamp;
 
       const s = stateRef.current;
+      const isDark = themeRef.current === "dark";
+      const surface = isDark ? DARK_SURFACE : LIGHT_SURFACE;
+      const grooveRgba = isDark ? "0, 0, 0" : "255, 255, 255";
       s.time += dt;
 
       if (prefersReducedMotion.current) {
-        // idle only, no drag/fling
         s.rotationSpeed += (s.targetSpeed - s.rotationSpeed) * SPEED_LERP;
         s.rotation += s.rotationSpeed * dt;
       } else if (s.isDragging) {
-        // idle paused, rotation driven by pointer events + dragVelocity
         s.rotation += s.dragVelocity * dt;
       } else if (s.isReturning) {
-        // fling momentum then ease back to target speed
         const speedDiff = s.targetSpeed - s.dragVelocity;
         s.dragVelocity += speedDiff * RETURN_LERP;
 
@@ -131,7 +159,6 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
           s.rotationSpeed = s.targetSpeed;
         }
       } else {
-        // normal idle
         s.rotationSpeed += (s.targetSpeed - s.rotationSpeed) * SPEED_LERP;
         s.rotation += s.rotationSpeed * dt;
       }
@@ -156,9 +183,9 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
         cy,
         outerR
       );
-      bgGrad.addColorStop(0, "#f5f5f5");
-      bgGrad.addColorStop(0.4, "#e8e8e8");
-      bgGrad.addColorStop(1, "#d4d4d4");
+      bgGrad.addColorStop(0, surface.inner);
+      bgGrad.addColorStop(0.4, surface.mid);
+      bgGrad.addColorStop(1, surface.outer);
       ctx.fillStyle = bgGrad;
       ctx.fillRect(0, 0, size, size);
 
@@ -189,7 +216,7 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
         const alphaBase = 0.03 + 0.04 * Math.sin(s.time * 0.8 + i * 0.3);
         ctx.beginPath();
         ctx.arc(0, 0, r, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(0, 0, 0, ${alphaBase})`;
+        ctx.strokeStyle = `rgba(${grooveRgba}, ${alphaBase})`;
         ctx.lineWidth = 0.5;
         ctx.stroke();
       }
@@ -272,9 +299,9 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
         sheenY,
         outerR * 0.7
       );
-      sheenGrad.addColorStop(0, "rgba(0, 0, 0, 0.04)");
-      sheenGrad.addColorStop(0.4, "rgba(0, 0, 0, 0.01)");
-      sheenGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      sheenGrad.addColorStop(0, `rgba(${grooveRgba}, 0.04)`);
+      sheenGrad.addColorStop(0.4, `rgba(${grooveRgba}, 0.01)`);
+      sheenGrad.addColorStop(1, `rgba(${grooveRgba}, 0)`);
       ctx.fillStyle = sheenGrad;
       ctx.fillRect(-outerR, -outerR, outerR * 2, outerR * 2);
 
@@ -287,11 +314,11 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
         outerR,
         0
       );
-      streakGrad.addColorStop(0, "rgba(0, 0, 0, 0)");
-      streakGrad.addColorStop(0.35, "rgba(0, 0, 0, 0)");
-      streakGrad.addColorStop(0.5, "rgba(0, 0, 0, 0.03)");
-      streakGrad.addColorStop(0.65, "rgba(0, 0, 0, 0)");
-      streakGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+      streakGrad.addColorStop(0, `rgba(${grooveRgba}, 0)`);
+      streakGrad.addColorStop(0.35, `rgba(${grooveRgba}, 0)`);
+      streakGrad.addColorStop(0.5, `rgba(${grooveRgba}, 0.03)`);
+      streakGrad.addColorStop(0.65, `rgba(${grooveRgba}, 0)`);
+      streakGrad.addColorStop(1, `rgba(${grooveRgba}, 0)`);
       ctx.fillStyle = streakGrad;
       ctx.fillRect(-outerR, -outerR * 0.15, outerR * 2, outerR * 0.3);
       ctx.restore();
@@ -302,9 +329,9 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
         const hlX = cx + s.hoverX * outerR * 0.8;
         const hlY = cy + s.hoverY * outerR * 0.8;
         const hlGrad = ctx.createRadialGradient(hlX, hlY, 0, hlX, hlY, outerR * 0.5);
-        hlGrad.addColorStop(0, "rgba(0, 0, 0, 0.05)");
-        hlGrad.addColorStop(0.5, "rgba(0, 0, 0, 0.015)");
-        hlGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+        hlGrad.addColorStop(0, `rgba(${grooveRgba}, 0.05)`);
+        hlGrad.addColorStop(0.5, `rgba(${grooveRgba}, 0.015)`);
+        hlGrad.addColorStop(1, `rgba(${grooveRgba}, 0)`);
         ctx.fillStyle = hlGrad;
         ctx.beginPath();
         ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
@@ -359,8 +386,8 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
             ripple.y * outerR,
             r
           );
-          distortGrad.addColorStop(0, `rgba(0, 0, 0, ${distortAlpha})`);
-          distortGrad.addColorStop(1, "rgba(0, 0, 0, 0)");
+          distortGrad.addColorStop(0, `rgba(${grooveRgba}, ${distortAlpha})`);
+          distortGrad.addColorStop(1, `rgba(${grooveRgba}, 0)`);
           ctx.fillStyle = distortGrad;
           ctx.beginPath();
           ctx.arc(
@@ -377,9 +404,9 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
       }
 
       const rimGrad = ctx.createRadialGradient(cx, cy, outerR - 2, cx, cy, outerR);
-      rimGrad.addColorStop(0, "rgba(0, 0, 0, 0)");
-      rimGrad.addColorStop(0.5, "rgba(0, 0, 0, 0.03)");
-      rimGrad.addColorStop(1, "rgba(0, 0, 0, 0.06)");
+      rimGrad.addColorStop(0, `rgba(${grooveRgba}, 0)`);
+      rimGrad.addColorStop(0.5, `rgba(${grooveRgba}, 0.03)`);
+      rimGrad.addColorStop(1, `rgba(${grooveRgba}, 0.06)`);
       ctx.beginPath();
       ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
       ctx.strokeStyle = "#b8860b";
@@ -420,21 +447,6 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
     s.hoverX = 0;
     s.hoverY = 0;
   }, []);
-
-  const computeAverageVelocity = (samples: VelocitySample[]): number => {
-    if (samples.length === 0) return 0;
-    const now = performance.now();
-    const recent = samples.filter((s) => now - s.time < 150);
-    if (recent.length === 0) return 0;
-    let totalDelta = 0;
-    let totalTime = 0;
-    for (let i = 1; i < recent.length; i++) {
-      totalDelta += recent[i].delta;
-      totalTime += (recent[i].time - recent[i - 1].time) / 1000;
-    }
-    if (totalTime <= 0) return recent[recent.length - 1].delta * 10;
-    return totalDelta / totalTime;
-  };
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
@@ -531,7 +543,7 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
         className="pointer-events-none absolute inset-0 rounded-full"
         style={{
           boxShadow:
-            "0 0 30px rgba(168, 85, 247, 0.05), 0 0 60px rgba(168, 85, 247, 0.03), inset 0 0 20px rgba(255, 255, 255, 0.15)",
+            "0 0 30px rgba(168, 85, 247, 0.05), 0 0 60px rgba(168, 85, 247, 0.03), inset 0 0 20px var(--color-surface, rgba(255, 255, 255, 0.15))",
         }}
       />
     </motion.div>
