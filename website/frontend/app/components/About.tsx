@@ -5,7 +5,7 @@ import LiquidVinylOrb from "./LiquidVinylOrb";
 
 export default function About() {
   return (
-    <section id="about" className="px-6 py-24">
+    <section id="about" className="px-6 py-16">
       <div className="mx-auto max-w-6xl">
         <ScrollFadeIn>
           <h2 className="text-center text-2xl font-bold sm:text-3xl">About Me</h2>

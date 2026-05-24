@@ -1,13 +1,9 @@
 import { ProjectMeta } from "@/lib/content";
 
 export default function ProjectCard({ project }: { project: ProjectMeta }) {
-  return (
-    <div className="flex flex-col rounded-lg border border-border bg-surface p-5 transition-colors hover:border-muted">
-      <div className="flex h-32 items-center justify-center rounded-md bg-background text-3xl text-muted">
-        +
-      </div>
-
-      <h3 className="mt-4 text-base font-semibold">{project.title}</h3>
+  const inner = (
+    <>
+      <h3 className="text-base font-semibold">{project.title}</h3>
       <p className="mt-2 text-sm leading-relaxed text-muted">
         {project.description}
       </p>
@@ -25,12 +21,7 @@ export default function ProjectCard({ project }: { project: ProjectMeta }) {
 
       {project.link && (
         <div className="mt-auto pt-4">
-          <a
-            href={project.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs text-muted transition-colors hover:text-foreground"
-          >
+          <span className="inline-flex items-center gap-1.5 text-xs text-muted transition-colors hover:text-foreground">
             <svg
               className="h-3.5 w-3.5"
               fill="none"
@@ -45,9 +36,21 @@ export default function ProjectCard({ project }: { project: ProjectMeta }) {
               />
             </svg>
             View Project
-          </a>
+          </span>
         </div>
       )}
-    </div>
+    </>
   );
+
+  const className = "flex flex-col rounded-lg border border-border bg-surface p-5 transition-colors hover:border-muted";
+
+  if (project.link) {
+    return (
+      <a href={project.link} target="_blank" rel="noopener noreferrer" className={className}>
+        {inner}
+      </a>
+    );
+  }
+
+  return <div className={className}>{inner}</div>;
 }

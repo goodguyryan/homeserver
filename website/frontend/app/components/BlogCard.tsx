@@ -8,11 +8,7 @@ interface BlogCardProps {
 export default function BlogCard({ post }: BlogCardProps) {
   return (
     <Link href={`/blog/${post.slug}`} className="flex flex-col rounded-lg border border-border bg-surface p-5 transition-colors hover:border-muted no-underline">
-      <div className="flex h-8 items-center rounded-md bg-background text-xs text-accent font-medium">
-        {post.date}
-      </div>
-
-      <h3 className="mt-4 text-base font-semibold">{post.title}</h3>
+      <h3 className="text-base font-semibold">{post.title}</h3>
       <p className="mt-2 text-sm leading-relaxed text-muted">{post.excerpt}</p>
 
       <div className="mt-auto pt-4">
