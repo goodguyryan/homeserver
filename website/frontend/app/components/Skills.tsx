@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { skills } from "@/data/skills";
 import ScrollFadeIn from "./ScrollFadeIn";
 
@@ -17,7 +18,7 @@ export default function Skills() {
         <div className="mt-12 grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
           {skills.map((group, i) => (
             <ScrollFadeIn key={group.category} delay={i * 0.1}>
-              <div className="rounded-lg border border-border bg-surface p-6">
+              <div className="rounded-lg border border-accent/20 bg-surface/60 backdrop-blur-sm p-6 transition-all hover:border-accent/50 hover:box-glow-purple">
                 <h3 className="text-sm font-semibold tracking-wide text-accent">
                   {group.category}
                 </h3>
@@ -25,11 +26,13 @@ export default function Skills() {
                   {group.items.map((item) => (
                     <li
                       key={item.name}
-                      className="flex items-center gap-1.5 rounded-md bg-background px-3 py-1 text-xs text-muted"
+                      className="flex items-center gap-1.5 rounded-md bg-background px-3 py-1 text-xs text-muted transition-all hover:bg-cyan/10 hover:text-cyan"
                     >
-                      <img
+                      <Image
                         src={item.icon}
                         alt=""
+                        width={16}
+                        height={16}
                         className="h-4 w-4"
                       />
                       {item.name}

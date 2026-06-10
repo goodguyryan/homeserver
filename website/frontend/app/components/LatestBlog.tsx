@@ -30,9 +30,9 @@ export default function LatestBlog({ posts }: { posts: BlogMeta[] }) {
           <div className="mt-10 flex justify-center">
             <Link
               href="/blog"
-              className="inline-flex h-12 items-center justify-center rounded-lg bg-accent px-6 text-sm font-medium text-white transition-colors hover:bg-accent-hover"
+              className="inline-flex h-12 items-center justify-center rounded-lg bg-accent px-6 text-sm font-medium text-white transition-all hover:bg-accent-hover hover:box-glow-purple"
             >
-              See More →
+              See More &rarr;
             </Link>
           </div>
         </ScrollFadeIn>

@@ -1,7 +1,14 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import ThemeProvider from "./components/ThemeProvider";
+import ScrollProgress from "./components/LazyScrollProgress";
+import BackgroundLayer from "./components/LazyBackgroundLayer";
+import Scanline from "./components/LazyScanline";
+import CursorGlow from "./components/LazyCursorGlow";
+import Footer from "./components/Footer";
 import "./globals.css";
+
+export const experimental_ppr = true;
 
 const inter = Inter({
   subsets: ["latin"],
@@ -21,9 +28,20 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} antialiased`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${inter.variable} antialiased`}
+      suppressHydrationWarning
+    >
       <body className="min-h-screen">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <ScrollProgress />
+          <BackgroundLayer />
+          <Scanline />
+          <CursorGlow />
+          {children}
+          <Footer />
+        </ThemeProvider>
       </body>
     </html>
   );

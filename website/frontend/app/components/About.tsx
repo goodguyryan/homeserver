@@ -17,7 +17,7 @@ export default function About() {
           </ScrollFadeIn>
 
           <ScrollFadeIn delay={0.2}>
-            <div className="flex flex-col gap-6 text-center md:text-left">
+            <div className="flex flex-col gap-6 text-center md:text-left bg-surface/60 backdrop-blur-sm border border-border rounded-lg p-6">
               <p className="text-base leading-relaxed text-muted">
                 Hi I&apos;m Ryan, a software engineer aspiring toward DevOps and Platform Engineering.
                 I enjoy building automation, infrastructure tooling, CI/CD workflows, and
@@ -38,15 +38,15 @@ export default function About() {
 
               <ul className="flex flex-col gap-2 text-sm text-muted">
                 <li className="flex items-start gap-2 md:items-center">
-                  <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-accent md:mt-0" />
+                  <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-cyan md:mt-0" />
                   Specializing in DevOps, Platform Engineering, and Reliability
                 </li>
                 <li className="flex items-start gap-2 md:items-center">
-                  <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-accent md:mt-0" />
+                  <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-cyan md:mt-0" />
                   Passionate about Automation and Infrastructure as Code
                 </li>
                 <li className="flex items-start gap-2 md:items-center">
-                  <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-accent md:mt-0" />
+                  <span className="mt-1.5 block h-1.5 w-1.5 shrink-0 rounded-full bg-cyan md:mt-0" />
                   Always learning, always building
                 </li>
               </ul>

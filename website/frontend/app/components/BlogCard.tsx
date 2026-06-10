@@ -7,14 +7,22 @@ interface BlogCardProps {
 
 export default function BlogCard({ post }: BlogCardProps) {
   return (
-    <Link href={`/blog/${post.slug}`} className="flex flex-col rounded-lg border border-border bg-surface p-5 transition-colors hover:border-muted no-underline">
+    <Link
+      href={`/blog/${post.slug}`}
+      className="flex flex-col rounded-lg border border-border bg-surface/60 backdrop-blur-sm p-5 transition-all hover:border-accent/50 hover:box-glow-purple no-underline"
+    >
+      {post.date && (
+          <span className="mb-2 inline-block w-fit rounded-md bg-cyan/10 px-2 py-0.5 text-xs text-cyan">
+          {post.date}
+        </span>
+      )}
       <h3 className="text-base font-semibold">{post.title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-muted">{post.excerpt}</p>
+      <p className="mt-2 text-sm leading-relaxed text-muted">
+        {post.excerpt}
+      </p>
 
       <div className="mt-auto pt-4">
-        <span
-          className="inline-flex items-center gap-1.5 text-xs text-muted transition-colors hover:text-foreground"
-        >
+          <span className="inline-flex items-center gap-1.5 text-xs text-muted transition-colors hover:text-pink">
           Read more
           <svg
             className="h-3.5 w-3.5"

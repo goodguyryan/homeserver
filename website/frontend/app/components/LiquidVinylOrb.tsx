@@ -40,8 +40,8 @@ const MAX_RIPPLES = 6;
 const MAX_FLING_SPEED = 8;
 const VELOCITY_SAMPLE_COUNT = 3;
 
-const DARK_SURFACE = { inner: "#f5f5f5", mid: "#e8e8e8", outer: "#d4d4d4" };
-const LIGHT_SURFACE = { inner: "#1a1a1a", mid: "#111111", outer: "#0a0a0a" };
+const DARK_SURFACE = { inner: "#f5f0ff", mid: "#e8e0ff", outer: "#d4c8f0" };
+const LIGHT_SURFACE = { inner: "#1a1025", mid: "#0d0221", outer: "#0a0118" };
 
 function computeAverageVelocity(samples: VelocitySample[]): number {
   if (samples.length === 0) return 0;
@@ -235,9 +235,9 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
         0,
         labelR
       );
-      labelGrad.addColorStop(0, "#c084fc");
-      labelGrad.addColorStop(0.5, "#a855f7");
-      labelGrad.addColorStop(1, "#7e22ce");
+      labelGrad.addColorStop(0, "#ff71ce");
+      labelGrad.addColorStop(0.5, "#b44dff");
+      labelGrad.addColorStop(1, "#00ffff");
       ctx.beginPath();
       ctx.arc(0, 0, labelR, 0, Math.PI * 2);
       ctx.fillStyle = labelGrad;
@@ -245,8 +245,8 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
 
       ctx.beginPath();
       ctx.arc(0, 0, labelR, 0, Math.PI * 2);
-      ctx.strokeStyle = "#b8860b";
-      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = "#00ffff";
+      ctx.lineWidth = 3;
       ctx.stroke();
 
       const innerRing = labelR * 0.6;
@@ -343,9 +343,9 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
       if (dragActive && dragMag > 0.3) {
         const dragIntensity = Math.min(dragMag / MAX_FLING_SPEED, 0.15);
         const dragGrad = ctx.createRadialGradient(cx, cy, labelR, cx, cy, outerR);
-        dragGrad.addColorStop(0, "rgba(168, 85, 247, 0)");
-        dragGrad.addColorStop(0.5, `rgba(168, 85, 247, ${dragIntensity * 0.3})`);
-        dragGrad.addColorStop(1, `rgba(168, 85, 247, ${dragIntensity})`);
+        dragGrad.addColorStop(0, "rgba(255, 113, 206, 0)");
+        dragGrad.addColorStop(0.5, `rgba(255, 113, 206, ${dragIntensity * 0.3})`);
+        dragGrad.addColorStop(1, `rgba(255, 113, 206, ${dragIntensity})`);
         ctx.fillStyle = dragGrad;
         ctx.fillRect(0, 0, size, size);
       }
@@ -371,7 +371,7 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
             0,
             Math.PI * 2
           );
-          ctx.strokeStyle = `rgba(168, 85, 247, ${Math.max(0, ringAlpha)})`;
+          ctx.strokeStyle = `rgba(180, 77, 255, ${Math.max(0, ringAlpha)})`;
           ctx.lineWidth = 1.5 - progress;
           ctx.stroke();
         }
@@ -409,7 +409,7 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
       rimGrad.addColorStop(1, `rgba(${grooveRgba}, 0.06)`);
       ctx.beginPath();
       ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
-      ctx.strokeStyle = "#b8860b";
+      ctx.strokeStyle = "#b44dff";
       ctx.lineWidth = 4;
       ctx.stroke();
 
@@ -543,7 +543,7 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
         className="pointer-events-none absolute inset-0 rounded-full"
         style={{
           boxShadow:
-            "0 0 30px rgba(168, 85, 247, 0.05), 0 0 60px rgba(168, 85, 247, 0.03), inset 0 0 20px var(--color-surface, rgba(255, 255, 255, 0.15))",
+            "0 0 40px rgba(180, 77, 255, 0.08), 0 0 80px rgba(180, 77, 255, 0.04), 0 0 10px rgba(0, 255, 255, 0.05)",
         }}
       />
     </motion.div>
