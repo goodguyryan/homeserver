@@ -11,7 +11,7 @@ const NAV_LINKS = [
   { label: "Blog", href: "/blog" },
 ];
 
-const emptySubscribe = () => () => {};
+const emptySubscribe = () => () => { };
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -39,13 +39,12 @@ export default function Navbar() {
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        scrolled || pathname !== "/"
-          ? "bg-background/60 backdrop-blur-xl border-b-2 border-accent/30"
-          : "bg-transparent"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled || pathname !== "/"
+        ? "bg-background/60 backdrop-blur-xl border-b-2 border-accent/30"
+        : "bg-transparent"
+        }`}
     >
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
+      <div className="mx-auto flex max-w-[90rem] items-center justify-between px-6 py-4">
         <Link
           href="/"
           className="text-lg font-semibold tracking-tight text-foreground transition-all hover:text-accent hover:text-glow-purple"
@@ -63,11 +62,10 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`text-sm transition-colors ${
-                  isActive
-                    ? "text-accent"
-                    : "text-muted hover:text-foreground"
-                }`}
+                className={`text-sm transition-colors ${isActive
+                  ? "text-accent"
+                  : "text-muted hover:text-foreground"
+                  }`}
               >
                 {link.label}
               </Link>
@@ -143,44 +141,42 @@ export default function Navbar() {
       </div>
 
       <div
-        className={`overflow-hidden border-t border-accent/20 bg-background/80 backdrop-blur-xl md:hidden transition-all duration-300 ${
-          mobileOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0 invisible"
-        }`}
+        className={`overflow-hidden border-t border-accent/20 bg-background/80 backdrop-blur-xl md:hidden transition-all duration-300 ${mobileOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0 invisible"
+          }`}
       >
         <div className="flex flex-col gap-4 px-6 py-6">
-              {NAV_LINKS.map((link) => {
-                const isActive =
-                  link.href === "/"
-                    ? pathname === "/"
-                    : pathname.startsWith(link.href);
-                return (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileOpen(false)}
-                    className={`text-sm transition-colors ${
-                      isActive
-                        ? "text-accent"
-                        : "text-muted hover:text-foreground"
-                    }`}
-                  >
-                    {link.label}
-                  </Link>
-                );
-              })}
-              <button
-                onClick={() => {
-                  setTheme(resolvedTheme === "dark" ? "light" : "dark");
-                  setMobileOpen(false);
-                }}
-                className="text-left text-sm text-muted transition-colors hover:text-foreground"
-                aria-label="Toggle theme"
+          {NAV_LINKS.map((link) => {
+            const isActive =
+              link.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileOpen(false)}
+                className={`text-sm transition-colors ${isActive
+                  ? "text-accent"
+                  : "text-muted hover:text-foreground"
+                  }`}
               >
-                {mounted && resolvedTheme === "dark"
-                  ? "Light Mode"
-                  : "Dark Mode"}
-              </button>
-            </div>
+                {link.label}
+              </Link>
+            );
+          })}
+          <button
+            onClick={() => {
+              setTheme(resolvedTheme === "dark" ? "light" : "dark");
+              setMobileOpen(false);
+            }}
+            className="text-left text-sm text-muted transition-colors hover:text-foreground"
+            aria-label="Toggle theme"
+          >
+            {mounted && resolvedTheme === "dark"
+              ? "Light Mode"
+              : "Dark Mode"}
+          </button>
+        </div>
       </div>
     </nav>
   );

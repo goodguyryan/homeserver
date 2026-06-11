@@ -5,7 +5,7 @@ export default function NotFound() {
   return (
     <div className="relative flex min-h-screen items-center justify-center px-6">
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <SynthwaveSun className="opacity-[0.06] dark:opacity-[0.10]" />
+        <SynthwaveSun className="opacity-[0.14] dark:opacity-[0.10]" />
       </div>
       <div className="relative text-center">
         <h1 className="bg-gradient-to-r from-accent via-cyan to-pink bg-clip-text text-7xl font-bold text-transparent bg-[length:200%_100%] animate-[gradient-shift_3s_linear_infinite]">

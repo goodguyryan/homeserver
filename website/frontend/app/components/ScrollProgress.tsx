@@ -25,7 +25,7 @@ export default function ScrollProgress() {
 
   return (
     <div
-      className="fixed top-0 left-0 z-[60] h-[2px] bg-gradient-to-r from-accent via-cyan to-pink"
+      className="fixed top-[calc(4.2rem-6px)] left-0 z-[60] h-[2px] bg-gradient-to-r from-accent via-cyan to-pink md:top-[4.2rem]"
       style={{
         width: `${progress}%`,
         transition: "width 0.15s ease-out",

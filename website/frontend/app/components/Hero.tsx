@@ -20,7 +20,7 @@ export default function Hero() {
         }}
       />
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <SynthwaveSun className="opacity-[0.06] dark:opacity-[0.10]" />
+        <SynthwaveSun className="opacity-[0.14] dark:opacity-[0.10]" />
       </div>
       <div className="relative z-10 mx-auto max-w-3xl text-center">
         <h1
@@ -73,7 +73,7 @@ export default function Hero() {
           className="mt-12"
           style={{ animation: "fadeIn 0.5s ease-out both", animationDelay: "0.6s" }}
         >
-          <div className="inline-block rounded-lg border border-accent/20 bg-surface/50 p-3">
+          <div className="inline-block rounded-lg bg-surface/50 p-3">
             <LogoCarousel />
           </div>
         </div>

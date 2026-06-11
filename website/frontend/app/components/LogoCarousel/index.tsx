@@ -18,7 +18,7 @@ export default function LogoCarousel() {
         className="flex gap-6"
         style={{
           "--scroll-distance": `-${SCROLL_DISTANCE}px`,
-          animation: `carousel-scroll ${CYCLE_DURATION}s linear infinite`,
+          animation: `carousel-scroll ${CYCLE_DURATION}s linear infinite reverse`,
         } as React.CSSProperties}
       >
         {displayLogos.map((logo, index) => (

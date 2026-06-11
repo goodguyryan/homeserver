@@ -7,7 +7,7 @@ export default function Contact() {
   return (
     <section id="contact" className="relative px-6 py-24">
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-        <SynthwaveSun className="opacity-[0.04] dark:opacity-[0.06]" />
+        <SynthwaveSun className="opacity-[0.10] dark:opacity-[0.06]" />
       </div>
       <div className="relative mx-auto max-w-2xl text-center">
         <ScrollFadeIn>

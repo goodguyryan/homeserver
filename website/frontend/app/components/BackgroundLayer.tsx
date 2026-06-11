@@ -31,9 +31,9 @@ export default function BackgroundLayer() {
               "var(--color-background)",
             ].join(", ")
           : [
-              "radial-gradient(circle, var(--dot-color) 1.5px, transparent 1.5px), var(--color-background)",
+              "linear-gradient(180deg, transparent 0%, rgba(168,85,247,0.03) 50%, transparent 100%)",
+              "var(--color-background)",
             ].join(", "),
-        backgroundSize: isDark ? undefined : "24px 24px",
       }}
     />
   );
