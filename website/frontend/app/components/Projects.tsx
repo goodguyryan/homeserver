@@ -16,13 +16,13 @@ export default function Projects({ projects }: { projects: ProjectMeta[] }) {
           </p>
         </ScrollFadeIn>
 
-        <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {projects.map((project, i) => (
-            <ScrollFadeIn key={project.title} delay={i * 0.1}>
-              <ProjectCard project={project} />
-            </ScrollFadeIn>
-          ))}
-        </div>
+        <ScrollFadeIn>
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {projects.map((project) => (
+              <ProjectCard key={project.title} project={project} />
+            ))}
+          </div>
+        </ScrollFadeIn>
 
         <ScrollFadeIn delay={0.3}>
           <div className="mt-10 flex justify-center">

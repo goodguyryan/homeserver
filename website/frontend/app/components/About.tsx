@@ -11,12 +11,9 @@ export default function About() {
           <h2 className="text-center text-2xl font-bold sm:text-3xl">About Me</h2>
         </ScrollFadeIn>
 
-        <div className="mt-12 flex flex-col items-center gap-12 md:flex-row md:items-start">
-          <ScrollFadeIn delay={0.1}>
+        <ScrollFadeIn>
+          <div className="mt-12 flex flex-col items-center gap-12 md:flex-row md:items-start">
             <LiquidVinylOrb size={192} />
-          </ScrollFadeIn>
-
-          <ScrollFadeIn delay={0.2}>
             <div className="flex flex-col gap-6 text-center md:text-left bg-surface/60 backdrop-blur-sm border border-border rounded-lg p-6">
               <p className="text-base leading-relaxed text-muted">
                 Hi I&apos;m Ryan, a software engineer aspiring toward DevOps and Platform Engineering.
@@ -51,8 +48,8 @@ export default function About() {
                 </li>
               </ul>
             </div>
-          </ScrollFadeIn>
-        </div>
+          </div>
+        </ScrollFadeIn>
       </div>
     </section>
   );

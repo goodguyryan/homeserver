@@ -18,15 +18,13 @@ export default function LatestBlog({ posts }: { posts: BlogMeta[] }) {
           </p>
         </ScrollFadeIn>
 
-        <ScrollFadeIn delay={0.1}>
+        <ScrollFadeIn>
           <div className="mt-12 flex flex-col gap-6">
             {posts.map((post) => (
               <BlogCard key={post.slug} post={post} />
             ))}
           </div>
-        </ScrollFadeIn>
 
-        <ScrollFadeIn delay={0.3}>
           <div className="mt-10 flex justify-center">
             <Link
               href="/blog"

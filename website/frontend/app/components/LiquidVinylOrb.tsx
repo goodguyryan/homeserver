@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useCallback } from "react";
-import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
 
 interface Ripple {
@@ -77,6 +76,8 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
     targetSpeed: IDLE_SPEED,
   });
   const rafRef = useRef<number>(0);
+  const visibleRef = useRef(true);
+  const fontRef = useRef("");
   const prefersReducedMotion = useRef(false);
 
   const { resolvedTheme } = useTheme();
@@ -116,6 +117,23 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        visibleRef.current = entry.isIntersecting;
+      },
+      { threshold: 0 }
+    );
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    fontRef.current = getComputedStyle(document.documentElement).getPropertyValue("--font-sans") || "ui-sans-serif, system-ui, sans-serif";
+  }, []);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
@@ -133,6 +151,11 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
     let lastTime = performance.now();
 
     const draw = (timestamp: number) => {
+      if (!visibleRef.current) {
+        rafRef.current = requestAnimationFrame(draw);
+        return;
+      }
+
       const dt = Math.min((timestamp - lastTime) / 1000, 0.05);
       lastTime = timestamp;
 
@@ -264,7 +287,7 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
       ctx.stroke();
 
       ctx.fillStyle = "#e8e8e8";
-      ctx.font = `bold ${Math.round(labelR * 0.65)}px ${getComputedStyle(document.documentElement).getPropertyValue("--font-sans") || "ui-sans-serif, system-ui, sans-serif"}`;
+      ctx.font = `bold ${Math.round(labelR * 0.65)}px ${fontRef.current}`;
       ctx.textAlign = "center";
       ctx.textBaseline = "middle";
       ctx.fillText("R", 0, 1);
@@ -517,12 +540,13 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
   }, []);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      transition={{ duration: 0.6, ease: "easeOut" }}
+    <div
       className="relative shrink-0 cursor-pointer select-none"
-      style={{ width: size, height: size }}
+      style={{
+        width: size,
+        height: size,
+        animation: "fadeInUp 0.6s ease-out",
+      }}
     >
       <div
         className="overflow-hidden rounded-full border border-border"
@@ -546,6 +570,6 @@ export default function LiquidVinylOrb({ size = 192 }: { size?: number }) {
             "0 0 40px rgba(180, 77, 255, 0.08), 0 0 80px rgba(180, 77, 255, 0.04), 0 0 10px rgba(0, 255, 255, 0.05)",
         }}
       />
-    </motion.div>
+    </div>
   );
 }

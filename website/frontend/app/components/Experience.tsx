@@ -7,24 +7,32 @@ import ScrollFadeIn from "./ScrollFadeIn";
 export default function Experience() {
   const [lineProgress, setLineProgress] = useState(0);
   const timelineRef = useRef<HTMLDivElement>(null);
+  const rafRef = useRef<number>(0);
+  const lastProgressRef = useRef(0);
 
   useEffect(() => {
     const onScroll = () => {
-      if (!timelineRef.current) return;
-      const rect = timelineRef.current.getBoundingClientRect();
-      const windowHeight = window.innerHeight;
-      const startPoint = windowHeight * 0.3;
-      const endPoint = rect.height + rect.top - windowHeight * 0.1;
-      const scrollPosition = startPoint - rect.top;
-      const totalScroll = endPoint - startPoint;
-      const progress = Math.max(
-        0,
-        Math.min(1, scrollPosition / totalScroll)
-      );
-      setLineProgress(progress);
+      if (rafRef.current) return;
+      rafRef.current = requestAnimationFrame(() => {
+        rafRef.current = 0;
+        if (!timelineRef.current) return;
+        const rect = timelineRef.current.getBoundingClientRect();
+        const windowHeight = window.innerHeight;
+        const startPoint = windowHeight * 0.3;
+        const endPoint = rect.height + rect.top - windowHeight * 0.1;
+        const scrollPosition = startPoint - rect.top;
+        const totalScroll = endPoint - startPoint;
+        const progress = Math.max(0, Math.min(1, scrollPosition / totalScroll));
+        if (Math.abs(progress - lastProgressRef.current) < 0.005) return;
+        lastProgressRef.current = progress;
+        setLineProgress(progress);
+      });
     };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
   }, []);
 
   return (
@@ -48,17 +56,13 @@ export default function Experience() {
             style={{
               height: `${lineProgress * 100}%`,
               background: "var(--color-accent)",
-              boxShadow: "0 0 8px var(--color-accent)",
-              transition: "height 0.3s ease-out",
             }}
           />
 
-          {experiences.map((exp, i) => (
-            <ScrollFadeIn
-              key={`${exp.company}-${exp.startDate}`}
-              delay={i * 0.15}
-            >
+          <ScrollFadeIn>
+            {experiences.map((exp, i) => (
               <div
+                key={`${exp.company}-${exp.startDate}`}
                 className={`relative mb-10 last:mb-0 md:w-1/2 ${
                   i % 2 === 0
                     ? "md:pr-10"
@@ -89,8 +93,8 @@ export default function Experience() {
                   </ul>
                 </div>
               </div>
-            </ScrollFadeIn>
-          ))}
+            ))}
+          </ScrollFadeIn>
         </div>
       </div>
     </section>

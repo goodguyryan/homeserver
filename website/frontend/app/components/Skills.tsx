@@ -15,10 +15,10 @@ export default function Skills() {
           </p>
         </ScrollFadeIn>
 
-        <div className="mt-12 grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
-          {skills.map((group, i) => (
-            <ScrollFadeIn key={group.category} delay={i * 0.1}>
-              <div className="rounded-lg border border-accent/20 bg-surface/60 backdrop-blur-sm p-6 transition-all hover:border-accent/50 hover:box-glow-purple">
+        <ScrollFadeIn>
+          <div className="mt-12 grid gap-6 sm:grid-cols-1 lg:grid-cols-2">
+            {skills.map((group) => (
+              <div key={group.category} className="rounded-lg border border-accent/20 bg-surface/60 backdrop-blur-sm p-6 transition-all hover:border-accent/50 hover:box-glow-purple">
                 <h3 className="text-sm font-semibold tracking-wide text-accent">
                   {group.category}
                 </h3>
@@ -40,9 +40,9 @@ export default function Skills() {
                   ))}
                 </ul>
               </div>
-            </ScrollFadeIn>
-          ))}
-        </div>
+            ))}
+          </div>
+        </ScrollFadeIn>
       </div>
     </section>
   );

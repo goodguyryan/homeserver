@@ -1,34 +1,26 @@
 "use client";
 
-import { useEffect } from "react";
+import { useMemo } from "react";
 import Image from "next/image";
-import { motion, animate, useMotionValue } from "framer-motion";
 import { logos } from "./logos";
 
 const LOGO_WIDTH = 25;
 const GAP_WIDTH = 24;
-const TOTAL_PER_LOGO = LOGO_WIDTH + GAP_WIDTH;
-const SCROLL_DISTANCE = (logos.length * TOTAL_PER_LOGO);
+const SCROLL_DISTANCE = logos.length * (LOGO_WIDTH + GAP_WIDTH);
 const CYCLE_DURATION = logos.length * 2;
 
 export default function LogoCarousel() {
-  const scrollX = useMotionValue(-SCROLL_DISTANCE);
-
-  useEffect(() => {
-    const controls = animate(scrollX, 0, {
-      duration: CYCLE_DURATION,
-      ease: "linear",
-      repeat: Infinity,
-      repeatType: "loop",
-    });
-    return () => controls.stop();
-  }, [scrollX]);
-
-  const displayLogos = [...logos, ...logos];
+  const displayLogos = useMemo(() => [...logos, ...logos], []);
 
   return (
     <div className="overflow-hidden w-[123px] mx-auto">
-      <motion.div style={{ x: scrollX }} className="flex gap-6">
+      <div
+        className="flex gap-6"
+        style={{
+          "--scroll-distance": `-${SCROLL_DISTANCE}px`,
+          animation: `carousel-scroll ${CYCLE_DURATION}s linear infinite`,
+        } as React.CSSProperties}
+      >
         {displayLogos.map((logo, index) => (
           <div
             key={`${logo.id}-${index}`}
@@ -43,7 +35,7 @@ export default function LogoCarousel() {
             />
           </div>
         ))}
-      </motion.div>
+      </div>
     </div>
   );
 }

@@ -4,9 +4,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   output: "standalone",
   pageExtensions: ["js", "jsx", "md", "mdx", "ts", "tsx"],
-  experimental: {
-    optimizePackageImports: ["framer-motion"],
-  },
+  allowedDevOrigins: ["100.121.31.62"],
 };
 
 const withMDX = createMDX({

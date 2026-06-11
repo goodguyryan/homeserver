@@ -17,10 +17,11 @@ export default function Contact() {
           </p>
         </ScrollFadeIn>
 
-        <div className="mt-10 flex flex-row items-center justify-center gap-8">
-          {[
-            {
-              href: "mailto:ryannggjk@google.com",
+        <ScrollFadeIn>
+          <div className="mt-10 flex flex-row items-center justify-center gap-8">
+            {[
+              {
+                href: "mailto:ryannggjk@google.com",
               label: "Email",
               icon: (
                 <svg
@@ -97,9 +98,9 @@ export default function Contact() {
                 </svg>
               ),
             },
-          ].map((item, i) => (
-            <ScrollFadeIn key={item.label} delay={i * 0.1}>
+          ].map((item) => (
               <a
+                key={item.label}
                 href={item.href}
                 target={item.external ? "_blank" : undefined}
                 rel={item.external ? "noopener noreferrer" : undefined}
@@ -108,9 +109,9 @@ export default function Contact() {
               >
                 {item.icon}
               </a>
-            </ScrollFadeIn>
-          ))}
-        </div>
+            ))}
+          </div>
+        </ScrollFadeIn>
       </div>
     </section>
   );

@@ -4,7 +4,6 @@ import { useState, useEffect, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { motion, AnimatePresence } from "framer-motion";
 
 const NAV_LINKS = [
   { label: "Home", href: "/" },
@@ -143,16 +142,12 @@ export default function Navbar() {
         </button>
       </div>
 
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.2 }}
-            className="overflow-hidden border-t border-accent/20 bg-background/80 backdrop-blur-xl md:hidden"
-          >
-            <div className="flex flex-col gap-4 px-6 py-6">
+      <div
+        className={`overflow-hidden border-t border-accent/20 bg-background/80 backdrop-blur-xl md:hidden transition-all duration-300 ${
+          mobileOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0 invisible"
+        }`}
+      >
+        <div className="flex flex-col gap-4 px-6 py-6">
               {NAV_LINKS.map((link) => {
                 const isActive =
                   link.href === "/"
@@ -186,9 +181,7 @@ export default function Navbar() {
                   : "Dark Mode"}
               </button>
             </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      </div>
     </nav>
   );
 }
