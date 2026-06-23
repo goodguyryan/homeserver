@@ -44,7 +44,7 @@ export default function Navbar() {
         : "bg-transparent"
         }`}
     >
-      <div className="mx-auto flex max-w-[90rem] items-center justify-between px-6 py-4">
+      <div className="mx-auto flex items-center justify-between px-6 py-4">
         <Link
           href="/"
           className="text-lg font-semibold tracking-tight text-foreground transition-all hover:text-accent hover:text-glow-purple"

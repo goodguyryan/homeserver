@@ -9,6 +9,7 @@ export const logos: Logo[] = [
   { id: "cplusplus", name: "C++", ariaLabel: "C++", src: "/logos/cplusplus.svg" },
   { id: "python", name: "Python", ariaLabel: "Python", src: "/logos/python.svg" },
   { id: "docker", name: "Docker", ariaLabel: "Docker", src: "/logos/docker.svg" },
+  { id: "kubernetes", name: "Kubernetes", ariaLabel: "Kubernetes", src: "/logos/kubernetes.svg" },
   { id: "terraform", name: "Terraform", ariaLabel: "Terraform", src: "/logos/terraform.svg" },
   { id: "ansible", name: "Ansible", ariaLabel: "Ansible", src: "/logos/ansible.svg" },
   { id: "githubactions", name: "GitHub Actions", ariaLabel: "GitHub Actions", src: "/logos/githubactions.svg" },

@@ -23,6 +23,21 @@ export const skills: SkillCategory[] = [
     ],
   },
   {
+    category: "DevOps & Infrastructure",
+    items: [
+      { name: "Docker", icon: "/logos/docker.svg" },
+      { name: "Kubernetes", icon: "/logos/kubernetes.svg" },
+      { name: "Terraform", icon: "/logos/terraform.svg" },
+      { name: "Ansible", icon: "/logos/ansible.svg" },
+      { name: "GitHub Actions", icon: "/logos/githubactions.svg" },
+      { name: "Linux", icon: "/logos/linux.svg" },
+      { name: "Bash", icon: "/logos/gnubash.svg" },
+      { name: "Windows Server", icon: "/logos/windows.svg" },
+      { name: "Git", icon: "/logos/git.svg" },
+      { name: "VirtualBox", icon: "/logos/virtualbox.svg" },
+    ],
+  },
+  {
     category: "Full-Stack",
     items: [
       { name: "React", icon: "/logos/react.svg" },
@@ -33,20 +48,6 @@ export const skills: SkillCategory[] = [
       { name: "PostgreSQL", icon: "/logos/postgresql.svg" },
       { name: "Supabase", icon: "/logos/supabase.svg" },
       { name: "HTML/CSS", icon: "/logos/htmlcss.svg" },
-    ],
-  },
-  {
-    category: "DevOps & Infrastructure",
-    items: [
-      { name: "Docker", icon: "/logos/docker.svg" },
-      { name: "Terraform", icon: "/logos/terraform.svg" },
-      { name: "Ansible", icon: "/logos/ansible.svg" },
-      { name: "GitHub Actions", icon: "/logos/githubactions.svg" },
-      { name: "Linux", icon: "/logos/linux.svg" },
-      { name: "Bash", icon: "/logos/gnubash.svg" },
-      { name: "Windows Server", icon: "/logos/windows.svg" },
-      { name: "Git", icon: "/logos/git.svg" },
-      { name: "VirtualBox", icon: "/logos/virtualbox.svg" },
     ],
   },
   {
