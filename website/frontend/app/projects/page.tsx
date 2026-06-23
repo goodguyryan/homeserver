@@ -1,0 +1,33 @@
+import { getAllProjects } from "@/lib/content";
+import Link from "next/link";
+import Navbar from "../components/Navbar";
+import ProjectCard from "../components/ProjectCard";
+
+export default function ProjectsPage() {
+  const projects = getAllProjects();
+
+  return (
+    <>
+      <Navbar />
+      <main className="px-6 py-24">
+        <div className="mx-auto max-w-6xl">
+          <h1 className="text-center text-3xl font-bold">Projects</h1>
+          <p className="mt-4 text-center text-muted">A selection of things I&apos;ve built and worked on.</p>
+          <div className="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {projects.map((project) => (
+              <ProjectCard key={project.slug} project={project} />
+            ))}
+          </div>
+          <div className="mt-10 flex justify-end">
+            <Link
+              href="/"
+              className="inline-flex h-12 items-center justify-center rounded-lg border border-accent/40 bg-background/60 backdrop-blur-sm px-6 text-sm font-medium text-foreground transition-all hover:border-cyan hover:box-glow-cyan"
+            >
+              &larr; Back to Home
+            </Link>
+          </div>
+        </div>
+      </main>
+    </>
+  );
+}
