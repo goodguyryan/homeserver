@@ -6,6 +6,8 @@ permissions:
     contents: read
 
 jobs:
+    website-image:
+        uses: ./.github/workflows/build-website.yml
     docker:
         uses: ./.github/workflows/docker-image.yml
     linter:
@@ -15,7 +17,7 @@ jobs:
     deploy:
         name: Deploy to Server
         runs-on: ubuntu-latest
-        needs: [docker, linter, tests]
+        needs: [website-image, docker, linter, tests]
         steps:
             - name: Connect runner to VPN
               uses: tailscale/github-action@v3
