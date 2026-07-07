@@ -75,14 +75,8 @@ spec:
   tls:
     - hosts:
         - headlamp
-  rules:
-    - host: headlamp
-      http:
-        paths:
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: headlamp
-                port:
-                  number: 80
+  defaultBackend:
+    service:
+      name: headlamp
+      port:
+        number: 80
