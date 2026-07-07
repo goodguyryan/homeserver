@@ -68,8 +68,6 @@ kind: Ingress
 metadata:
   name: headlamp
   namespace: headlamp
-  annotations:
-    tailscale.com/proxy-group: private-ingress
 spec:
   ingressClassName: tailscale
   tls:
