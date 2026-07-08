@@ -42,10 +42,6 @@ spec:
           command: ["sleep"]
           args: ["infinity"]
 
-          envFrom:
-            - secretRef:
-                name: hermes-secrets
-
           volumeMounts:
             - name: hermes-data
               mountPath: /opt/data
