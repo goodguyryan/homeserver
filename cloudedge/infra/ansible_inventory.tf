@@ -1,7 +1,7 @@
 resource "local_file" "ansible_inventory" {
-  filename = "../configure/inventory.yml"
+  filename = "../configure/inventory.json"
 
-  content = yamlencode({
+  content = jsonencode({
     all = {
       hosts = {
         vm = {
