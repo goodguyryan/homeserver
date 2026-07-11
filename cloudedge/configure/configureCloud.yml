@@ -7,6 +7,10 @@
   vars_files:
     - "{{ playbook_dir }}/.env.yml"
 
+  vars:
+    prometheus_retention_time: 30d
+    prometheus_retention_size: 15GB
+
   tasks:
     - name: Update System
       ansible.builtin.apt:
@@ -46,6 +50,7 @@
         tailscale up
         --authkey={{ tailscale_auth_key }}
         --advertise-exit-node
+        --accept-dns=true
       become: true
       when: ts_backend_state in ['NeedsLogin', 'Stopped', 'NoState']
 
@@ -53,34 +58,73 @@
       ansible.builtin.include_role:
         name: prometheus.prometheus.prometheus
       vars:
-        prometheus_config_file: "{{ playbook_dir | dirname }}/monitoring/prometheus.yml.j2"
-        prometheus_storage_retention: "3d"
+        prometheus_config_file: "{{ playbook_dir | dirname }}/monitoring/prometheus.yml"
+        prometheus_storage_retention: "{{ prometheus_retention_time }}"
+        prometheus_storage_retention_size: "{{ prometheus_retention_size }}"
+
+    - name: Validate Prometheus configuration
+      ansible.builtin.command:
+        cmd: promtool check config /etc/prometheus/prometheus.yml
+      changed_when: false
 
     - name: Install and Configure Node-Exporter
       ansible.builtin.include_role:
         name: prometheus.prometheus.node_exporter
 
-    - name: Install Grafana Dependencies
+    - name: Install and Configure Alertmanager
+      ansible.builtin.include_role:
+        name: prometheus.prometheus.alertmanager
+      vars:
+        alertmanager_config_file: "{{ playbook_dir | dirname }}/monitoring/alertmanager.yml"
+
+    - name: Validate Alertmanager configuration
+      ansible.builtin.command:
+        cmd: amtool check-config /etc/alertmanager/alertmanager.yml
+      changed_when: false
+
+    - name: Add Grafana GPG key
+      ansible.builtin.get_url:
+        url: https://apt.grafana.com/gpg.key
+        dest: /etc/apt/keyrings/grafana.asc
+        mode: "0644"
+
+    - name: Add Grafana APT repository
+      ansible.builtin.apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/grafana.asc] https://apt.grafana.com stable main"
+        state: present
+        filename: grafana
+
+    - name: Install Grafana
       ansible.builtin.apt:
-        name:
-          - adduser
-          - libfontconfig1
-          - musl
+        name: grafana
         state: present
         update_cache: true
 
-    - name: Download Grafana .deb
-      ansible.builtin.get_url:
-        url: "https://dl.grafana.com/grafana/release/12.4.0/grafana_12.4.0_22325204712_linux_amd64.deb"
-        dest: "/tmp/grafana_12.4.0_22325204712_linux_amd64.deb"
+    - name: Create Grafana provisioning directory
+      ansible.builtin.file:
+        path: /etc/grafana/provisioning/datasources
+        state: directory
+        owner: grafana
+        group: grafana
+        mode: "0755"
 
-    - name: Install Grafana .deb package
-      ansible.builtin.apt:
-        deb: "/tmp/grafana_12.4.0_22325204712_linux_amd64.deb"
-        state: present
+    - name: Configure Grafana Prometheus datasource
+      ansible.builtin.copy:
+        src: "{{ playbook_dir | dirname }}/monitoring/grafana-datasources.yml"
+        dest: /etc/grafana/provisioning/datasources/prometheus.yml
+        owner: grafana
+        group: grafana
+        mode: "0644"
+      notify: restart grafana-server
 
     - name: Enable and start Grafana
       ansible.builtin.service:
         name: grafana-server
         enabled: true
         state: started
+
+  handlers:
+    - name: restart grafana-server
+      ansible.builtin.service:
+        name: grafana-server
+        state: restarted

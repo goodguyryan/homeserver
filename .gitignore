@@ -5,14 +5,15 @@ venv/
 pgdata/
 
 #.env
-*.env
-*.env*
+.env
+.env.yml
 
 #Terraform
 .terraform/
 .terraform.lock.hcl
 *.tfstate
 *.tfstate.*
+ansible_inventory.tf
 
 #Ansible
 inventory.yml
