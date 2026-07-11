@@ -10,7 +10,7 @@ variable "region" {
 
 variable "droplet_name" {
   type    = string
-  default = "tf-demo-vm"
+  default = "cloudedge"
 }
 
 variable "ssh_key_name" {
