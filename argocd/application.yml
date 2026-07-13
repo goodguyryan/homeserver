@@ -19,9 +19,9 @@ spec:
     namespace: default
 
   syncPolicy:
-    syncOptions:
-      # Prevent deletion during the initial migration.
-      - Prune=false
+    automated:
+      selfHeal: true
+      prune: true
 
-      # Prevent two Argo CD Applications from owning the same resource.
+    syncOptions:
       - FailOnSharedResource=true
