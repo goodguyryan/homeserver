@@ -1,0 +1,84 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: website-frontend
+  namespace: website
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: website-frontend
+  template:
+    metadata:
+      labels:
+        app: website-frontend
+    spec:
+      containers:
+        - name: frontend
+          image: ghcr.io/goodguyryan/homeserver-website-frontend:latest
+          ports:
+            - name: http
+              containerPort: 3000
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "500m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: website-frontend
+  namespace: website
+spec:
+  type: ClusterIP
+  selector:
+    app: website-frontend
+  ports:
+    - name: http
+      port: 80
+      targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: website-frontend
+  namespace: website
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: ryanngjk.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: website-frontend
+                port:
+                  number: 80
+    - host: www.ryanngjk.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: website-frontend
+                port:
+                  number: 80

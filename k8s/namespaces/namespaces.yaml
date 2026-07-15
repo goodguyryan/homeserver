@@ -1,0 +1,35 @@
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cloudflare
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: headlamp
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hermes
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: website
+  annotations:
+    argocd.argoproj.io/sync-options: Prune=confirm,Delete=confirm
