@@ -1,0 +1,19 @@
+name: CI Orchestrator
+on:
+    push:
+        branches: [main]
+    pull_request:
+        branches: [main]
+permissions:
+    contents: read
+    packages: write
+
+jobs:
+    website-image:
+        uses: ./.github/workflows/build-website.yml
+    docker:
+        uses: ./.github/workflows/docker-image.yml
+    linter:
+        uses: ./.github/workflows/pylintTelegram.yml
+    tests:
+        uses: ./.github/workflows/testPythonTelegram.yml
