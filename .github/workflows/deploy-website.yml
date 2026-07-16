@@ -1,0 +1,116 @@
+name: Deploy Website Frontend
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "website/frontend/**"
+
+concurrency:
+  group: website-frontend-deployment
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_DEPLOY_TOKEN }}
+
+      - name: Resolve merged PR head SHA
+        id: pr-sha
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          COMMIT="${{ github.sha }}"
+          REPO="${{ github.repository }}"
+
+          PR_INFO=$(gh api "repos/$REPO/commits/$COMMIT/pulls" \
+            --jq '.[] | select(.state=="closed" and .merged_at!=null and .base.ref=="main") | {number: .number, head_sha: .head.sha}')
+
+          if [ -z "$PR_INFO" ]; then
+            echo "No merged PR found for commit $COMMIT. Skipping deployment."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          PR_NUMBER=$(echo "$PR_INFO" | jq -r '.number')
+          HEAD_SHA=$(echo "$PR_INFO" | jq -r '.head_sha')
+          SHORT_SHA=$(echo "$HEAD_SHA" | cut -c1-12)
+
+          echo "Resolved PR #$PR_NUMBER  head SHA: $HEAD_SHA  short: $SHORT_SHA"
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "pr_number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "short_sha=$SHORT_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Verify image exists
+        if: steps.pr-sha.outputs.skip != 'true'
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/homeserver-website-frontend:sha-${{ steps.pr-sha.outputs.short_sha }}
+        run: |
+          echo "Verifying image: $IMAGE"
+          docker buildx imagetools inspect "$IMAGE"
+
+      - name: Update Kubernetes manifest
+        if: steps.pr-sha.outputs.skip != 'true'
+        env:
+          IMAGE: ghcr.io/${{ github.repository_owner }}/homeserver-website-frontend:sha-${{ steps.pr-sha.outputs.short_sha }}
+        run: |
+          pip install pyyaml
+          python3 << 'PYEOF'
+          import yaml, os, sys
+
+          manifest_path = "k8s/apps/website.yml"
+          target_image = os.environ["IMAGE"]
+
+          with open(manifest_path, "r") as f:
+              docs = list(yaml.safe_load_all(f))
+
+          updated = False
+          for doc in docs:
+              if doc is None:
+                  continue
+              kind = doc.get("kind")
+              meta = doc.get("metadata", {})
+              if kind == "Deployment" and meta.get("name") == "website-frontend" and meta.get("namespace") == "website":
+                  containers = doc["spec"]["template"]["spec"]["containers"]
+                  for container in containers:
+                      if container.get("name") == "frontend":
+                          old = container.get("image", "(missing)")
+                          container["image"] = target_image
+                          container["imagePullPolicy"] = "IfNotPresent"
+                          print(f"Updated image: {old} -> {target_image}")
+                          updated = True
+
+          if not updated:
+              print("ERROR: Could not find frontend container in website-frontend Deployment")
+              sys.exit(1)
+
+          with open(manifest_path, "w") as f:
+              yaml.dump_all(docs, f, default_flow_style=False, sort_keys=False)
+          print("Manifest updated successfully.")
+          PYEOF
+
+      - name: Commit and push manifest
+        if: steps.pr-sha.outputs.skip != 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if git diff --quiet k8s/apps/website.yml; then
+            echo "Manifest already references the expected image. Nothing to commit."
+            exit 0
+          fi
+
+          git add k8s/apps/website.yml
+          git commit -m "automatic action deploy(website): sha-${{ steps.pr-sha.outputs.short_sha }}"
+
+          git pull --rebase origin main
+          git push

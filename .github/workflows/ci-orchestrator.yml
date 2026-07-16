@@ -2,6 +2,8 @@ name: CI Orchestrator
 on:
     pull_request:
         branches: [main]
+        paths-ignore:
+            - "k8s/**"
 permissions:
     contents: read
     packages: write
