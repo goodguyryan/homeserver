@@ -61,6 +61,7 @@
         mode: "0644"
       delegate_to: localhost
       run_once: true
+      become: false
 
     - name: Install and Configure Prometheus
       ansible.builtin.include_role:
@@ -81,6 +82,7 @@
         state: absent
       delegate_to: localhost
       run_once: true
+      become: false
       changed_when: false
 
     - name: Install and Configure Node-Exporter
