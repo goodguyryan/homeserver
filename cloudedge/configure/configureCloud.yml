@@ -54,17 +54,29 @@
       become: true
       when: ts_backend_state in ['NeedsLogin', 'Stopped', 'NoState']
 
+    - name: Template Prometheus config
+      ansible.builtin.template:
+        src: "{{ playbook_dir | dirname }}/monitoring/prometheus.yml.j2"
+        dest: /tmp/prometheus.yml
+        mode: "0644"
+
     - name: Install and Configure Prometheus
       ansible.builtin.include_role:
         name: prometheus.prometheus.prometheus
       vars:
-        prometheus_config_file: "{{ playbook_dir | dirname }}/monitoring/prometheus.yml"
+        prometheus_config_file: /tmp/prometheus.yml
         prometheus_storage_retention: "{{ prometheus_retention_time }}"
         prometheus_storage_retention_size: "{{ prometheus_retention_size }}"
 
     - name: Validate Prometheus configuration
       ansible.builtin.command:
         cmd: promtool check config /etc/prometheus/prometheus.yml
+      changed_when: false
+
+    - name: Remove temp Prometheus config
+      ansible.builtin.file:
+        path: /tmp/prometheus.yml
+        state: absent
       changed_when: false
 
     - name: Install and Configure Node-Exporter
