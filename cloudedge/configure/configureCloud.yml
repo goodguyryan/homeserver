@@ -59,6 +59,8 @@
         src: "{{ playbook_dir | dirname }}/monitoring/prometheus.yml.j2"
         dest: /tmp/prometheus.yml
         mode: "0644"
+      delegate_to: localhost
+      run_once: true
 
     - name: Install and Configure Prometheus
       ansible.builtin.include_role:
@@ -77,6 +79,8 @@
       ansible.builtin.file:
         path: /tmp/prometheus.yml
         state: absent
+      delegate_to: localhost
+      run_once: true
       changed_when: false
 
     - name: Install and Configure Node-Exporter
