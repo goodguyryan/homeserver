@@ -55,7 +55,7 @@ export default function Hero() {
           style={{ animation: "fadeInUp 0.5s ease-out both", animationDelay: "0.45s" }}
         >
           <a
-            href="/resume.pdf"
+            href="/RyanNgJingkai_Resume.pdf"
             download
             className="inline-flex h-12 items-center justify-center rounded-lg bg-accent px-6 text-sm font-medium text-white transition-all hover:bg-accent-hover hover:box-glow-purple"
           >
