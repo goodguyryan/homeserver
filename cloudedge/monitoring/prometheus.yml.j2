@@ -37,4 +37,4 @@ scrape_configs:
     scheme: https
     static_configs:
       - targets:
-          - "kube-state-metrics.tailnet-name.example.ts.net"
+          - "kube-state-metrics.{{ TAILSCALE_TAILNET_NAME }}.ts.net"
