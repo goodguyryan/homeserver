@@ -1,0 +1,978 @@
+---
+title: "Creating a Kubernetes Cluster from Scratch with kubeadm"
+date: "June 2026"
+excerpt: "A one-shot guide to building a Kubernetes cluster from scratch with kubeadm — host prep, install, CNI, and post-setup."
+slug: "k8s-cluster"
+featured: true
+---
+
+## Introduction
+
+One of the issues I felt with the Kubernetes cluster setup was that the documentation was too all over the place, and that there was not a good one-shot guide to learn how to set up a whole cluster from scratch. So, I decided to write a guide (also as a reference for myself in the future teehee) to share more about the setup.
+
+For this guide, I will be using `kubeadm` to set up a basic Kubernetes cluster, not k3s. The official Kubernetes docs split the process across installing `kubeadm` and creating the cluster with `kubeadm`, so this guide tries to connect the pieces together into one flow. The Kubernetes docs describe `kubeadm` as the command used to bootstrap the cluster, `kubelet` as the component that runs on every machine and starts Pods and containers, and `kubectl` as the command-line utility used to talk to the cluster.
+
+## Notes Before Starting
+
+There are a few things of note. Firstly, the OS of choice was Fedora. I mostly chose it due to comfort after having worked mostly in Fedora and RHEL environments in a previous internship. As such, there might be a few things here that differ compared to other Linux flavours.
+
+I also categorise the different steps as it helped me pace myself and made the steps feel more neat:
+
+* **Host preparation**: preparing the machines, IP addresses, hostnames, firewall, kernel settings, and OS-level requirements.
+* **Installing kubeadm**: installing the container runtime, `kubeadm`, `kubelet`, and `kubectl`.
+* **Creating the cluster**: running `kubeadm init` on the control plane and `kubeadm join` on worker nodes.
+* **CNI / networking add-ons**: installing the Pod network so Pods can talk to each other.
+* **Post-cluster setup**: labels, checks, and basic validation.
+* **Optional steps**: things that are useful, but not strictly required for the base cluster.
+
+For this setup, I am assuming the following machines:
+
+```text
+k8s-cp1       192.168.1.10      control plane
+k8s-worker1   192.168.1.11      worker
+k8s-worker2   192.168.1.12      worker
+```
+
+I am also assuming the following Kubernetes network ranges:
+
+```text
+Pod CIDR:      10.244.0.0/16
+Service CIDR:  10.96.0.0/12
+```
+
+The important thing here is that the Pod CIDR and Service CIDR should not overlap with the actual networks your machines already use. The Kubernetes docs specifically warn that the Pod network must not overlap with host networks, otherwise you are likely to see networking problems.
+
+For example, if my home LAN is:
+
+```text
+192.168.1.0/24
+```
+
+then using:
+
+```text
+10.244.0.0/16
+10.96.0.0/12
+```
+
+is fine, because they do not overlap with `192.168.1.0/24`.
+
+So are you ready to cook up a cluster? letsgo!
+
+## Step 1 to 3: Preparing the Machines to Recognise One Another
+
+**Nature of step: Host preparation**
+
+The first few steps are grouped together because they all serve the same purpose: making sure the machines are stable, reachable, and uniquely identifiable before Kubernetes is installed.
+
+Kubernetes expects the machines in the cluster to have full network connectivity with one another. The kubeadm cluster creation docs also list full network connectivity between all machines as a requirement.
+
+### Step 1: Set Static IPs
+
+First, find your NetworkManager connection name:
+
+```bash
+nmcli con show
+```
+
+Example output:
+
+```text
+NAME                TYPE      DEVICE
+Wired connection 1  ethernet  enp3s0
+```
+
+On `k8s-cp1`:
+
+```bash
+sudo nmcli con mod "Wired connection 1" \
+  ipv4.addresses 192.168.1.10/24 \
+  ipv4.gateway 192.168.1.1 \
+  ipv4.dns "1.1.1.1 8.8.8.8" \
+  ipv4.method manual
+
+sudo nmcli con up "Wired connection 1"
+```
+
+On `k8s-worker1`:
+
+```bash
+sudo nmcli con mod "Wired connection 1" \
+  ipv4.addresses 192.168.1.11/24 \
+  ipv4.gateway 192.168.1.1 \
+  ipv4.dns "1.1.1.1 8.8.8.8" \
+  ipv4.method manual
+
+sudo nmcli con up "Wired connection 1"
+```
+
+On `k8s-worker2`:
+
+```bash
+sudo nmcli con mod "Wired connection 1" \
+  ipv4.addresses 192.168.1.12/24 \
+  ipv4.gateway 192.168.1.1 \
+  ipv4.dns "1.1.1.1 8.8.8.8" \
+  ipv4.method manual
+
+sudo nmcli con up "Wired connection 1"
+```
+
+Verify:
+
+```bash
+ip addr
+ip route
+ping -c 3 8.8.8.8
+```
+
+### Step 2: Set Hostnames
+
+On the control-plane node:
+
+```bash
+sudo hostnamectl set-hostname k8s-cp1
+```
+
+On worker 1:
+
+```bash
+sudo hostnamectl set-hostname k8s-worker1
+```
+
+On worker 2:
+
+```bash
+sudo hostnamectl set-hostname k8s-worker2
+```
+
+Then on all 3 nodes, add the host mappings:
+
+```bash
+sudo tee -a /etc/hosts <<EOF
+192.168.1.10 k8s-cp1
+192.168.1.11 k8s-worker1
+192.168.1.12 k8s-worker2
+EOF
+```
+
+Test from each node:
+
+```bash
+ping -c 3 k8s-cp1
+ping -c 3 k8s-worker1
+ping -c 3 k8s-worker2
+```
+
+### Step 3: Check That the Nodes Are Unique
+
+Kubernetes expects each node to have unique identifying information. The kubeadm install docs mention checking unique MAC addresses and product UUIDs, which is especially important if the nodes are cloned VMs.
+
+Run on all 3 nodes:
+
+```bash
+hostname
+ip link
+sudo cat /sys/class/dmi/id/product_uuid
+```
+
+For physical machines, this should usually be fine. For cloned VMs, this is worth checking carefully.
+
+## Step 4: Update Fedora and Install Base Tools
+
+**Nature of step: Host preparation**
+
+Run on all 3 nodes:
+
+```bash
+sudo dnf upgrade -y
+sudo reboot
+```
+
+After reboot:
+
+```bash
+sudo dnf install -y \
+  vim curl wget git bash-completion \
+  iproute-tc conntrack-tools socat ebtables ethtool \
+  tar jq
+```
+
+This step is mostly just to make sure the machines are updated and have the basic tools needed for networking checks, debugging, and downloading manifests.
+
+## Step 5: Disable Swap
+
+**Nature of step: Installing kubeadm**
+
+Run on all 3 nodes:
+
+```bash
+sudo swapoff -a
+sudo sed -ri '/\sswap\s/s/^#?/#/' /etc/fstab
+```
+
+Verify:
+
+```bash
+swapon --show
+free -h
+```
+
+`swapon --show` should return nothing.
+
+The purpose of this step is to make sure kubelet can manage memory predictably. The kubeadm install docs say that kubelet fails by default if swap is detected, unless it has been specifically configured otherwise.
+
+In simple terms, Kubernetes wants to make scheduling decisions based on the actual memory available on the node. If swap is enabled, the node may look like it has more usable memory than it really does, and that can make workload behaviour less predictable.
+
+## Step 6: Configure Kernel Networking
+
+**Nature of step: Installing kubeadm / Host preparation**
+
+Run on all 3 nodes:
+
+```bash
+cat <<EOF | sudo tee /etc/modules-load.d/k8s.conf
+overlay
+br_netfilter
+EOF
+
+sudo modprobe overlay
+sudo modprobe br_netfilter
+```
+
+Then:
+
+```bash
+cat <<EOF | sudo tee /etc/sysctl.d/k8s.conf
+net.ipv4.ip_forward = 1
+net.bridge.bridge-nf-call-iptables = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+EOF
+
+sudo sysctl --system
+```
+
+Verify:
+
+```bash
+sysctl net.ipv4.ip_forward
+```
+
+Expected:
+
+```text
+net.ipv4.ip_forward = 1
+```
+
+The purpose of this step is to make Linux behave properly as a Kubernetes node. Pods need traffic to be routed between interfaces, and Kubernetes networking commonly depends on Linux bridge and iptables behaviour. The Kubernetes container runtime docs say IPv4 forwarding needs to be enabled for cluster networking.
+
+The `overlay` module is used by overlay filesystems, while `br_netfilter` allows bridged traffic to be processed by iptables. This matters because Kubernetes networking relies heavily on packet forwarding, NAT, and filtering rules.
+
+## Step 7: Set SELinux to Permissive
+
+**Nature of step: Host preparation / RPM-based distro setup**
+
+Run on all 3 nodes:
+
+```bash
+sudo setenforce 0
+sudo sed -i 's/^SELINUX=enforcing$/SELINUX=permissive/' /etc/selinux/config
+```
+
+Verify:
+
+```bash
+getenforce
+```
+
+Expected:
+
+```text
+Permissive
+```
+
+I saw this suggested specifically for RPM-based distros somewhere online. It said that setting SELinux to permissive is required to allow containers to access the host filesystem, and that some cluster network plugins require this until SELinux support is improved in kubelet. They also mention that SELinux can be left enabled if you know how to configure it, but this may require settings not supported by kubeadm.
+
+The purpose of SELinux is to provide mandatory access control. In simpler terms, even if a process has normal Linux permissions, SELinux can still restrict what it is allowed to access. This is good for security, but during a first kubeadm setup, it can add another layer of complexity, especially when learning how the cluster works.
+
+## Step 8: Configure the Firewall Properly
+
+**Nature of step: Host preparation**
+
+The kubeadm install docs say the required ports need to be open so Kubernetes components can communicate with each other, and also note that the Pod network plugin may require additional ports depending on the plugin used.
+
+For this guide, I am assuming my cluster nodes are on:
+
+```text
+192.168.1.0/24
+```
+
+If your LAN subnet is different, replace `192.168.1.0/24` with your own subnet.
+
+### Kubernetes Required Ports
+
+| Node type     | Protocol |  Port range | Purpose                 |
+| ------------- | -------: | ----------: | ----------------------- |
+| Control plane |      TCP |        6443 | Kubernetes API server   |
+| Control plane |      TCP |   2379-2380 | etcd server client API  |
+| Control plane |      TCP |       10250 | Kubelet API             |
+| Control plane |      TCP |       10257 | kube-controller-manager |
+| Control plane |      TCP |       10259 | kube-scheduler          |
+| Worker        |      TCP |       10250 | Kubelet API             |
+| Worker        |      TCP |       10256 | kube-proxy              |
+| Worker        |      TCP | 30000-32767 | NodePort Services       |
+| Worker        |      UDP | 30000-32767 | NodePort Services       |
+
+These ports are from the official Kubernetes ports and protocols reference.
+
+### Calico Ports
+
+For Calico, the ports depend on the networking mode. In this setup, I will configure Calico to use VXLAN, so I need to allow UDP `4789` between nodes. Calico’s docs list UDP `4789` for VXLAN, TCP `179` for BGP, and TCP `5473` for Typha if enabled.
+
+| Component    | Protocol | Port | Purpose                                   |
+| ------------ | -------: | ---: | ----------------------------------------- |
+| Calico VXLAN |      UDP | 4789 | Pod network overlay traffic between nodes |
+| Calico BGP   |      TCP |  179 | Only needed if using BGP mode             |
+| Calico Typha |      TCP | 5473 | Only needed if Typha is enabled           |
+
+For this guide, I will open the Kubernetes ports and Calico VXLAN port.
+
+### Create a Firewall Zone for the Cluster
+
+Run on all 3 nodes:
+
+```bash
+sudo firewall-cmd --permanent --new-zone=k8s || true
+sudo firewall-cmd --permanent --zone=k8s --add-source=192.168.1.0/24
+```
+
+### On the Control-Plane Node
+
+Run on `k8s-cp1`:
+
+```bash
+sudo firewall-cmd --permanent --zone=k8s --add-port=6443/tcp
+sudo firewall-cmd --permanent --zone=k8s --add-port=2379-2380/tcp
+sudo firewall-cmd --permanent --zone=k8s --add-port=10250/tcp
+sudo firewall-cmd --permanent --zone=k8s --add-port=10257/tcp
+sudo firewall-cmd --permanent --zone=k8s --add-port=10259/tcp
+sudo firewall-cmd --permanent --zone=k8s --add-port=4789/udp
+sudo firewall-cmd --reload
+```
+
+### On the Worker Nodes
+
+Run on `k8s-worker1` and `k8s-worker2`:
+
+```bash
+sudo firewall-cmd --permanent --zone=k8s --add-port=10250/tcp
+sudo firewall-cmd --permanent --zone=k8s --add-port=10256/tcp
+sudo firewall-cmd --permanent --zone=k8s --add-port=30000-32767/tcp
+sudo firewall-cmd --permanent --zone=k8s --add-port=30000-32767/udp
+sudo firewall-cmd --permanent --zone=k8s --add-port=4789/udp
+sudo firewall-cmd --reload
+```
+
+Check the zone:
+
+```bash
+sudo firewall-cmd --zone=k8s --list-all
+```
+
+This keeps the firewall enabled, while allowing Kubernetes traffic from the cluster LAN.
+
+## Step 9: Install containerd
+
+**Nature of step: Installing kubeadm**
+
+Run on all 3 nodes:
+
+```bash
+sudo dnf install -y containerd
+```
+
+Create the default config:
+
+```bash
+sudo mkdir -p /etc/containerd
+containerd config default | sudo tee /etc/containerd/config.toml >/dev/null
+```
+
+Set systemd cgroups:
+
+```bash
+sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+```
+
+Make sure CRI is not disabled:
+
+```bash
+grep -n "disabled_plugins" /etc/containerd/config.toml
+```
+
+If you see:
+
+```toml
+disabled_plugins = ["cri"]
+```
+
+edit the file:
+
+```bash
+sudo vim /etc/containerd/config.toml
+```
+
+and change it to:
+
+```toml
+disabled_plugins = []
+```
+
+Then enable containerd:
+
+```bash
+sudo systemctl enable --now containerd
+sudo systemctl restart containerd
+```
+
+Verify:
+
+```bash
+sudo systemctl status containerd
+```
+
+The purpose of the container runtime is to actually run containers on each node. Kubernetes itself does not directly run containers; it talks to a container runtime through CRI, the Container Runtime Interface. The Kubernetes docs say each node needs a container runtime so that Pods can run there, and Kubernetes 1.36 requires a runtime that conforms to CRI.
+
+## Step 10: Add the Kubernetes RPM Repository
+
+**Nature of step: Installing kubeadm**
+
+Run on all 3 nodes:
+
+```bash
+cat <<EOF | sudo tee /etc/yum.repos.d/kubernetes.repo
+[kubernetes]
+name=Kubernetes
+baseurl=https://pkgs.k8s.io/core:/stable:/v1.36/rpm/
+enabled=1
+gpgcheck=1
+gpgkey=https://pkgs.k8s.io/core:/stable:/v1.36/rpm/repodata/repomd.xml.key
+exclude=kubelet kubeadm kubectl cri-tools kubernetes-cni
+EOF
+```
+
+This adds the Kubernetes package repository for RPM-based systems such as Fedora/RHEL-style distributions.
+
+## Step 11: Install kubeadm, kubelet, and kubectl
+
+**Nature of step: Installing kubeadm**
+
+Run on all 3 nodes:
+
+```bash
+sudo dnf install -y kubelet kubeadm kubectl --disableexcludes=kubernetes
+```
+
+If Fedora’s DNF complains about `--disableexcludes`, use:
+
+```bash
+sudo dnf install -y kubelet kubeadm kubectl --setopt=disable_excludes=kubernetes
+```
+
+Enable kubelet:
+
+```bash
+sudo systemctl enable --now kubelet
+```
+
+Check versions:
+
+```bash
+kubeadm version
+kubectl version --client
+kubelet --version
+```
+
+It is normal if kubelet is not fully healthy yet. The cluster creation docs say kubelet may restart every few seconds while waiting for kubeadm to tell it what to do, and that this becomes normal after the control plane is initialized.
+
+## Step 12: Pull the Required Control-Plane Images
+
+**Nature of step: Creating the cluster / optional preparation**
+
+Run only on `k8s-cp1`:
+
+```bash
+sudo kubeadm config images pull \
+  --cri-socket=unix:///run/containerd/containerd.sock
+```
+
+This step is optional. The kubeadm cluster creation docs mention that pre-pulling images is useful if you do not want `kubeadm init` and `kubeadm join` to download images during cluster creation.
+
+## Step 13: Initialize the Control Plane
+
+**Nature of step: Creating the cluster**
+
+Run only on `k8s-cp1`:
+
+```bash
+sudo kubeadm init \
+  --apiserver-advertise-address=192.168.1.10 \
+  --pod-network-cidr=10.244.0.0/16 \
+  --service-cidr=10.96.0.0/12 \
+  --cri-socket=unix:///run/containerd/containerd.sock
+```
+
+The control-plane node is where the main Kubernetes control-plane components run, including `etcd`, which stores cluster state, and the API server, which `kubectl` communicates with. The kubeadm docs also say that depending on the CNI provider, you may need to pass a provider-specific `--pod-network-cidr`.
+
+When this succeeds, save the `kubeadm join ...` command printed at the end. You will need it later for the worker nodes.
+
+## Step 14: Configure kubectl on the Control Plane
+
+**Nature of step: Creating the cluster**
+
+Run on `k8s-cp1` as your normal user:
+
+```bash
+mkdir -p $HOME/.kube
+sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
+sudo chown $(id -u):$(id -g) $HOME/.kube/config
+```
+
+Test:
+
+```bash
+kubectl get nodes
+```
+
+At this point, the control-plane node may show `NotReady`. This is expected because the Pod network has not been installed yet.
+
+## Step 15: Install the CNI / Pod Network
+
+**Nature of step: CNI / networking add-on**
+
+Kubernetes needs a CNI so that Pods can talk to one another across nodes. CNI stands for Container Network Interface. In Kubernetes, the CNI plugin is responsible for setting up Pod networking.
+
+This is important because kubeadm does not install a Pod network for you. The Kubernetes docs say that you must deploy a CNI-based Pod network add-on so that Pods can communicate with each other, and that CoreDNS will not start before a network is installed.
+
+For this setup, I will use Calico.
+
+Run on `k8s-cp1`:
+
+```bash
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.1/manifests/v1_crd_projectcalico_org.yaml
+kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.32.1/manifests/tigera-operator.yaml
+```
+
+Download the Calico custom resources file:
+
+```bash
+curl -O https://raw.githubusercontent.com/projectcalico/calico/v3.32.1/manifests/custom-resources.yaml
+```
+
+Edit it:
+
+```bash
+vim custom-resources.yaml
+```
+
+Find the IP pool section. I want the Calico CIDR to match the Pod CIDR used in `kubeadm init`.
+
+Change the CIDR to:
+
+```yaml
+cidr: 10.244.0.0/16
+```
+
+Since I opened UDP `4789` earlier, I will also use VXLAN encapsulation:
+
+```yaml
+encapsulation: VXLAN
+```
+
+Then apply it:
+
+```bash
+kubectl create -f custom-resources.yaml
+```
+
+Watch the Pods:
+
+```bash
+watch kubectl get pods -A
+```
+
+Check CoreDNS:
+
+```bash
+kubectl get pods -n kube-system
+```
+
+Once the CNI is working, CoreDNS should become `Running`. The Kubernetes docs say that after the Pod network is installed, you can confirm it is working by checking that the CoreDNS Pod is `Running`.
+
+## Step 16: Join the Worker Nodes
+
+**Nature of step: Creating the cluster**
+
+On `k8s-worker1` and `k8s-worker2`, run the join command printed by `kubeadm init`.
+
+It will look something like this:
+
+```bash
+sudo kubeadm join 192.168.1.10:6443 \
+  --token <token> \
+  --discovery-token-ca-cert-hash sha256:<hash> \
+  --cri-socket=unix:///run/containerd/containerd.sock
+```
+
+If you lost the join command, regenerate it on `k8s-cp1`:
+
+```bash
+kubeadm token create --print-join-command
+```
+
+Then add this manually if needed:
+
+```bash
+--cri-socket=unix:///run/containerd/containerd.sock
+```
+
+Back on `k8s-cp1`, check the nodes:
+
+```bash
+kubectl get nodes -o wide
+```
+
+Expected:
+
+```text
+NAME          STATUS   ROLES           AGE   VERSION
+k8s-cp1       Ready    control-plane    ...
+k8s-worker1   Ready    <none>           ...
+k8s-worker2   Ready    <none>           ...
+```
+
+The worker nodes are where the workloads run, and the Kubernetes docs point to `kubeadm join` as the way to add worker nodes into the cluster.
+
+## Step 17: Label the Worker Nodes
+
+**Nature of step: Post-cluster setup**
+
+Run on `k8s-cp1`:
+
+```bash
+kubectl label node k8s-worker1 node-role.kubernetes.io/worker=worker
+kubectl label node k8s-worker2 node-role.kubernetes.io/worker=worker
+```
+
+Check:
+
+```bash
+kubectl get nodes
+```
+
+Expected:
+
+```text
+NAME          STATUS   ROLES
+k8s-cp1       Ready    control-plane
+k8s-worker1   Ready    worker
+k8s-worker2   Ready    worker
+```
+
+This does not change scheduling behaviour by itself, but it makes the node roles clearer when reading `kubectl get nodes`.
+
+## Step 18: Keep the Control Plane Isolated
+
+**Nature of step: Post-cluster setup**
+
+Check the control-plane taint:
+
+```bash
+kubectl describe node k8s-cp1 | grep -i taint
+```
+
+You should see something like:
+
+```text
+node-role.kubernetes.io/control-plane:NoSchedule
+```
+
+By default, kubeadm does not schedule normal Pods on control-plane nodes for security reasons. The docs show how to remove this taint for a single-machine cluster, but in this setup I will leave it alone because I have two 32GB worker nodes.
+
+In other words:
+
+```text
+8GB machine     = control plane
+32GB machines  = workloads
+```
+
+## Step 19: Test the Cluster with nginx
+
+**Nature of step: Post-cluster validation**
+
+Create a test deployment:
+
+```bash
+kubectl create deployment nginx-test --image=nginx
+```
+
+Expose it internally:
+
+```bash
+kubectl expose deployment nginx-test --port=80 --target-port=80
+```
+
+Check where the Pod is running:
+
+```bash
+kubectl get pods -o wide
+```
+
+The Pod should be scheduled on one of the worker nodes, not the control-plane node.
+
+Test internal service DNS:
+
+```bash
+kubectl run curl-test --rm -it --image=curlimages/curl -- sh
+```
+
+Inside the shell:
+
+```sh
+curl nginx-test
+exit
+```
+
+Clean up:
+
+```bash
+kubectl delete deployment nginx-test
+kubectl delete service nginx-test
+```
+
+If this works, it means the basic cluster, Pod networking, and internal Service discovery are working.
+
+## Step 20: Install a StorageClass
+
+**Nature of step: Post-cluster add-on**
+
+This is where I install a simple StorageClass.
+
+A StorageClass is how Kubernetes describes different types of storage available in the cluster. The Kubernetes docs say a StorageClass provides a way for administrators to describe the classes of storage they offer, such as different quality-of-service levels, backup policies, or other storage policies.
+
+The reason this matters is that many applications need persistent storage. For example, if I eventually want to run something like Gitea or Postgres, I need a way for Pods to request storage through PersistentVolumeClaims.
+
+Dynamic volume provisioning allows storage to be created on demand instead of requiring administrators to manually create storage volumes first. Kubernetes implements this using StorageClass objects.
+
+For a learning setup, I will use local-path provisioner:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/master/deploy/local-path-storage.yaml
+```
+
+Set it as the default StorageClass:
+
+```bash
+kubectl patch storageclass local-path \
+  -p '{"metadata": {"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+```
+
+Check:
+
+```bash
+kubectl get storageclass
+```
+
+Expected:
+
+```text
+local-path (default)
+```
+
+This is good enough for learning PVCs and StatefulSets. However, it is not a full production-grade storage setup because the data lives on the local node. If that node goes down, the workload may not be able to access the data from another node.
+
+## Final Verification
+
+**Nature of step: Post-cluster validation**
+
+Run:
+
+```bash
+kubectl get nodes -o wide
+kubectl get pods -A
+kubectl get storageclass
+```
+
+Healthy state should look roughly like:
+
+```text
+k8s-cp1       Ready   control-plane
+k8s-worker1   Ready   worker
+k8s-worker2   Ready   worker
+```
+
+And the important system Pods should be running:
+
+```text
+CoreDNS running
+Calico running
+kube-proxy running
+default StorageClass present
+```
+
+## Optional Steps
+
+These steps are useful, but I am keeping them separate because they are not required for the base kubeadm cluster to work.
+
+### Optional Step 1: Install metrics-server
+
+**Nature of step: Optional post-cluster add-on**
+
+This is useful if you want commands like:
+
+```bash
+kubectl top nodes
+kubectl top pods
+```
+
+Install metrics-server:
+
+```bash
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+```
+
+Check:
+
+```bash
+kubectl get pods -n kube-system | grep metrics
+kubectl top nodes
+```
+
+If `kubectl top nodes` fails because of kubelet TLS issues in a homelab setup, patch metrics-server:
+
+```bash
+kubectl patch deployment metrics-server -n kube-system --type='json' \
+  -p='[
+    {
+      "op":"add",
+      "path":"/spec/template/spec/containers/0/args/-",
+      "value":"--kubelet-insecure-tls"
+    }
+  ]'
+
+kubectl rollout restart deployment metrics-server -n kube-system
+```
+
+Then check again:
+
+```bash
+kubectl top nodes
+```
+
+### Optional Step 2: Copy kubeconfig to Your Laptop
+
+**Nature of step: Optional post-cluster setup**
+
+The Kubernetes docs say that to control the cluster from another computer, you can copy the administrator kubeconfig file from the control-plane node to your workstation. They also warn that `admin.conf` gives superuser privileges, so it should be used carefully.
+
+From your laptop:
+
+```bash
+mkdir -p ~/.kube
+scp <your-user>@192.168.1.10:/home/<your-user>/.kube/config ~/.kube/homelab-k8s
+```
+
+Then:
+
+```bash
+export KUBECONFIG=~/.kube/homelab-k8s
+kubectl get nodes
+```
+
+### Optional Step 3: Install MetalLB
+
+**Nature of step: Optional post-cluster add-on**
+
+On cloud Kubernetes, a `Service` of type `LoadBalancer` usually gets an external IP from the cloud provider. On bare metal, there is no cloud load balancer by default, so I can use MetalLB to provide LoadBalancer-style IPs on my LAN.
+
+Choose a LAN IP range outside your router’s DHCP pool, for example:
+
+```text
+192.168.1.240-192.168.1.250
+```
+
+Install MetalLB:
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.15.2/config/manifests/metallb-native.yaml
+```
+
+Wait for the Pods:
+
+```bash
+kubectl get pods -n metallb-system
+```
+
+Create an address pool:
+
+```bash
+cat <<EOF | kubectl apply -f -
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: homelab-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - 192.168.1.240-192.168.1.250
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: homelab-l2
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - homelab-pool
+EOF
+```
+
+Test it:
+
+```bash
+kubectl create deployment nginx-lb --image=nginx
+kubectl expose deployment nginx-lb --port=80 --type=LoadBalancer
+kubectl get svc nginx-lb
+```
+
+Clean up:
+
+```bash
+kubectl delete deployment nginx-lb
+kubectl delete service nginx-lb
+```
+
+## Important Final Note
+
+This setup has one control-plane node and one etcd database. The kubeadm docs mention that with a single control-plane node, if that node fails, the cluster may lose data and may need to be recreated from scratch. One workaround is to regularly back up etcd.
+
+So for my setup:
+
+```text
+8GB machine:
+  control plane only
+  etcd
+  API server
+  scheduler
+  controller manager
+
+2x32GB machines:
+  workloads
+  apps
+  databases
+  monitoring
+```
+
+This is good enough for learning and homelab use, but it is not a highly available production cluster. The next thing I would probably look into after this is backups, GitOps, ingress, and proper storage.
+
+And that is basically the cluster cooked.
