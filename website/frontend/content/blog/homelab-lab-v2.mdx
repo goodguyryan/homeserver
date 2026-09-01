@@ -1,0 +1,63 @@
+---
+title: "Homelab v2"
+date: "July 2026"
+excerpt: "My upgraded homelab!"
+slug: "homelab-lab-v2"
+featured: true
+---
+
+## Introduction
+
+So, i finally had the time to write this blog! during the 2 week gap between my 2 internship, I finally had the time to work on a project that I have been thinking about for a while. after being annoyed about how much space that my old laptop was taking, I decided it was time to get an upgrade and take up even more space with a bunch of wires and mini PCs. So after confirming that a listing I saw was not a scam (by trying my luck with a 8 gb ram version), i got my hands on 2 refurbished mini PCs (32GB version) and got to work on my new and improved homelab!
+
+## Kubernetes Cluster
+
+The first cool thing I worked on was setting up a Kubernetes cluster. Read more about it [here](/blog/k8s-cluster).
+
+I also extended my cloud edge set up to support my cluster. This means adjusting YAML files so that my Prometheus can now target the new cluster!
+
+## Deploying Some Applications
+
+After the cluster was set up, I deployed some applications
+
+Some of the applications I deployed were:
+
+* My personal website (which means you are in my cluster now!)
+* Headlamp (because I think seeing the cluster update with a UI in real time is cool)
+* ArgoCD (more below!)
+
+## Private and Public Access Using IngressClass
+
+One thing I wanted to figure out was how to separate public-facing applications from private applications, which are all accessible remotely. I decided on a dual IngressClass approach as it gave me a clean and declarative way to separate applications by access pattern.
+
+For public-facing applications, I used the `nginx` IngressClass. These are applications that I am okay with exposing publicly, such as my personal website. Instead of exposing every service directly, the application traffic goes through the NGINX Ingress Controller, which acts as the entry point for public HTTP traffic.
+
+For example, a public-facing application would use:
+
+```yaml
+ingressClassName: nginx
+```
+
+For private applications, I used the Tailscale Operator. These are applications that I only want to access privately, without exposing them directly to the public internet. Instead of going through the public ingress path, these applications use the `tailscale` IngressClass.
+
+For example, a private application would use:
+
+```yaml
+ingressClassName: tailscale
+```
+
+In my case, this meant that something like my personal website could be exposed publicly, while internal tools like Headlamp could stay private and only be accessible through my Tailnet.
+
+The Tailscale Operator also makes this feel quite clean because it handles the Tailscale side of exposing the private application. For private Ingress resources, it can create the required Tailscale proxy resources and route traffic from the Tailnet to the Kubernetes Service.
+
+This was one of the parts that made the homelab feel more intentional. I was not just deploying random applications into a cluster, but also thinking about how each application should be accessed, and whether it should be public or private by default.
+
+## GitOps with Argo CD
+
+After working on the cluster for a while, I got lazy doing manual deployment, hence, the next thing I worked on was GitOps with Argo CD.
+
+This was something that was very interesting and I think I will pen down my thoughts about it in a dedicated post in the future.
+
+## Final Thoughts
+
+Overall, this homelab project was a really fun way to learn more about Kubernetes, networking, deployment workflows, and GitOps. I thoroughly enjoyed the process and would definitely want to try more stuff in the future.
