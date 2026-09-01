@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: ghcr.io/goodguyryan/homeserver-website-frontend:sha-2f0e595c4181
+        image: ghcr.io/goodguyryan/homeserver-website-frontend:sha-495aec6ec917
         ports:
         - name: http
           containerPort: 3000
